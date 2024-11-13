@@ -22,7 +22,7 @@ export const sendMessage = async (req, res) => {
     const sender = await prisma.user.findUnique({ where: { id: senderId } });
     if (!sender) return res.status(404).json({ message: "Sender not found" });
 
-    // If message is via EB, get the EB for the sender's committee
+    // Determine EB user if message is via EB
     let EBId = null;
     if (isViaEB) {
       const EBUser = await prisma.user.findFirst({
@@ -35,19 +35,15 @@ export const sendMessage = async (req, res) => {
       EBId = EBUser.id;
     }
 
-    // Create a new conversation
+    // Create or fetch conversation
     const conversation = await prisma.conversation.create({
-      data: {
-        participantIds: [senderId, receiverId],
-      },
+      data: { participantIds: [senderId, receiverId] },
     });
 
-    // Add conversation ID to both participants
+    // Update conversation ID for both users
     await prisma.user.updateMany({
       where: { id: { in: [senderId, receiverId] } },
-      data: {
-        conversationIds: { push: conversation.id },
-      },
+      data: { conversationIds: { push: conversation.id } },
     });
 
     // Create the message
@@ -61,15 +57,15 @@ export const sendMessage = async (req, res) => {
       },
     });
 
-    // Emit the message
+    // Emit the message to the receiver (or EB if via EB)
     const receiverSocketId = getReceiverSocketId(isViaEB ? EBId : receiverId);
-    if (receiverSocketId)
+    if (receiverSocketId) {
       io.to(receiverSocketId).emit("newMessage", newMessage);
+    }
 
-    res.status(201).json({
-      message: "Message sent successfully",
-      data: newMessage,
-    });
+    res
+      .status(201)
+      .json({ message: "Message sent successfully", data: newMessage });
   } catch (error) {
     console.error("Error in sendMessage:", error);
     res.status(500).json({ message: "Internal server error" });
