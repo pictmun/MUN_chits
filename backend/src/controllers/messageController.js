@@ -1,6 +1,8 @@
 import prisma from "../db/prisma.js";
-import { MessageStatus } from "@prisma/client";
+import pkg from "@prisma/client";
 import { getReceiverSocketId } from "../socket/socket.js";
+const { MessageStatus } = pkg;
+
 export const sendMessage = async (req, res) => {
   try {
     const { message, isViaEB } = req.body;

@@ -1,7 +1,9 @@
 import prisma from "../db/prisma.js";
 import bcrypt from "bcryptjs";
-import { Role } from "@prisma/client";
+import pkg from "@prisma/client";
 import { getReceiverSocketId, io } from "../socket/socket.js";
+
+const { Role } = pkg;
 
 export const signup = async (req, res) => {
   try {
