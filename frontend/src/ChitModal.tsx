@@ -1,5 +1,6 @@
-import React from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { Button } from "./components/ui/button";
 
 type Message = {
   id: number;
@@ -8,7 +9,6 @@ type Message = {
   timestamp: string;
   message: string;
   sendViaEB: boolean;
-  isUnread: boolean;
 };
 
 type ChitModalProps = {
@@ -20,27 +20,24 @@ const ChitModal: React.FC<ChitModalProps> = ({ messages }) => {
   const navigate = useNavigate();
 
   // Find the chit from the messages array based on the ID
-  const chit = messages.find(msg => msg.id === parseInt(id!));
+  const chit = messages.find((msg) => msg.id === parseInt(id!));
 
   if (!chit) {
     return <div>Chit not found</div>;
   }
 
   const handleClose = () => {
-    navigate('/'); // Go back to the inbox
+    navigate("/"); // Go back to the inbox
   };
 
   return (
-    <div className="max-w-xl mx-auto bg-white shadow-lg rounded-lg p-6">
+    <div className="max-w-xl w-full mx-auto bg-white shadow-lg rounded-lg p-6">
       {/* Header */}
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-semibold">Chit Details</h2>
-        <button
-          onClick={handleClose}
-          className="text-gray-500 hover:text-gray-700 focus:outline-none"
-        >
+        <Button variant={"destructive"} onClick={handleClose}>
           Close
-        </button>
+        </Button>
       </div>
 
       {/* Chit Info */}

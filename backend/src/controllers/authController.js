@@ -25,11 +25,13 @@ export const login = async (req, res) => {
 
     const token = await generateToken(user.id, res);
     res.status(200).json({
-      id: user.id,
-      username: user.username,
-      portfolio: user.portfolio,
-      role: user.role,
-      committee: user.committee,
+      user: {
+        id: user.id,
+        username: user.username,
+        portfolio: user.portfolio,
+        role: user.role,
+        committee: user.committee,
+      },
     });
   } catch (error) {
     console.error("Error in login:", error);

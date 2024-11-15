@@ -1,23 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, useParams } from 'react-router-dom';
-import ChitEntry from './ChitEntry';
-import Inbox from './inbox';
-import ChitModal from './ChitModal';
-
-type Message = {
-  id: number;
-  sender: string;
-  subject: string;
-  timestamp: string;
-  message: string;
-  sendViaEB: boolean;
-  isUnread: boolean;
-};
-
-const messages: Message[] = [
-  { id: 1, sender: "America", subject: "Global Invasion", message: "Keep My country's name off yo mouth!!!", timestamp: "10:30 AM", isUnread: true, sendViaEB: true },
-  { id: 2, sender: "Japan", subject: "Watch some anime dude", message: "Anime is culture, embrace it!", timestamp: "9:00 AM", isUnread: false, sendViaEB: false },
-];
+// src/components/App.tsx
+import React, { useState } from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import ChitEntry from "./ChitEntry";
+import Inbox from "./inbox";
+import ChitModalWrapper from "./ChitModalWrapper";
+import { messages, Message } from "./data/messages";
+import Login from "./LoginPage";
+import { Toaster } from "./components/ui/sonner";
 
 const App: React.FC = () => {
   const [selectedChit, setSelectedChit] = useState<Message | null>(null);
@@ -32,11 +21,16 @@ const App: React.FC = () => {
 
   return (
     <Router>
-      <div className="App">
+      <div className="flex items-center justify-center h-screen w-full">
         <Routes>
           <Route
             path="/"
-            element={<Inbox messages={messages} onMessageSelect={handleSelectMessage} />}
+            element={
+              <Inbox
+                messages={messages}
+                onMessageSelect={handleSelectMessage}
+              />
+            }
           />
           <Route
             path="/chit-entry"
@@ -46,29 +40,12 @@ const App: React.FC = () => {
             path="/chit/:id"
             element={<ChitModalWrapper onClose={handleCloseModal} />}
           />
+          <Route path="/login" element={<Login />} />
         </Routes>
+        <Toaster />
       </div>
     </Router>
   );
-};
-
-interface ChitModalWrapperProps {
-  onClose: () => void;
-}
-
-const ChitModalWrapper: React.FC<ChitModalWrapperProps> = ({ onClose }) => {
-  const { id } = useParams<{ id: string }>();
-
-  // Ensure we handle the case where `id` might be undefined or invalid
-  const chitData = messages.find((message) => message.id === parseInt(id!));
-
-  if (!chitData) {
-    // If no chit found, show an error or fallback UI
-    return <div>Chit not found</div>;
-  }
-
-  // Return the ChitModal with valid chit data
-  return <ChitModal chit={chitData} onClose={onClose} />;
 };
 
 export default App;
