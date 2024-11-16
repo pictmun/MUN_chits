@@ -97,7 +97,7 @@ export const getMessages = async (req, res) => {
     });
 
     if (!conversation) return res.status(200).json([]);
-    res.status(200).json(conversation.messages);
+    res.status(200).json(conversation);
   } catch (error) {
     console.error("Error in getMessages:", error);
     res.status(500).json({ message: "Internal server error" });
@@ -195,3 +195,76 @@ export const replyMessage = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+export const getReceivedMessages = async (req, res) => {
+  console.log("received messages");
+  try {
+    const userId = req.user.id;
+
+    // Fetch all conversations where the user is a participant
+    const conversations = await prisma.conversation.findMany({
+      where: {
+        participantIds: {
+          has: userId, // Check if the user is a participant
+        },
+      },
+      include: {
+        messages: {
+          where: {
+            NOT: {
+              senderId: userId, // Exclude messages sent by the user
+            },
+            status: "APPROVED", // Only include approved messages
+          },
+          orderBy: {
+            createdAt: "desc", // Order messages by latest first
+          },
+          include: {
+            sender: {
+              select: {
+                id: true,
+                username: true, // Include the sender's username
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // Flatten messages across all conversations
+    const receivedMessages = conversations.flatMap((conversation) =>
+      conversation.messages.map((message) => ({
+        ...message,
+        conversationId: conversation.id,
+      }))
+    );
+
+    console.log(receivedMessages);
+    res.status(200).json({ messages: receivedMessages, success: true });
+  } catch (error) {
+    console.error("Error fetching received messages:", error);
+    res.status(500).json({ message: "Internal server error", error: true });
+  }
+};
+
+export const getMessageFromId = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const message = await prisma.message.findUnique({
+      where: { id },
+      include: {
+        sender: {
+          select: {
+            id: true,
+            username: true, // Include the sender's username
+          },
+        },
+        
+      },
+    });
+    res.status(200).json({ message, success: true });
+  } catch (error) {
+    console.error("Error fetching conversation:", error);
+    res.status(500).json({ message: "Internal server error", error: true });
+  }
+}

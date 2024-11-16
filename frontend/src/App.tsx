@@ -1,20 +1,23 @@
 // src/components/App.tsx
 import React, { useState } from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import ChitEntry from "./ChitEntry";
 import Inbox from "./inbox";
 import ChitModalWrapper from "./ChitModalWrapper";
 import { messages, Message } from "./data/messages";
 import Login from "./LoginPage";
 import { Toaster } from "./components/ui/sonner";
+import { useAuthContext } from "./context/AuthContext";
 
 const App: React.FC = () => {
   const [selectedChit, setSelectedChit] = useState<Message | null>(null);
-
+  const { isLoading, authUser } = useAuthContext();
   const handleSelectMessage = (message: Message) => {
     setSelectedChit(message);
   };
-
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
   const handleCloseModal = () => {
     setSelectedChit(null);
   };
@@ -26,21 +29,41 @@ const App: React.FC = () => {
           <Route
             path="/"
             element={
-              <Inbox
-                messages={messages}
-                onMessageSelect={handleSelectMessage}
-              />
+              authUser ? (
+                <Inbox
+                  messages={messages}
+                  onMessageSelect={handleSelectMessage}
+                />
+              ) : (
+                <Navigate to="/login" />
+              )
             }
           />
           <Route
             path="/chit-entry"
-            element={<ChitEntry onSubmit={(chit) => console.log(chit)} />}
+            element={authUser ? <ChitEntry /> : <Navigate to="/login" />}
           />
           <Route
             path="/chit/:id"
-            element={<ChitModalWrapper onClose={handleCloseModal} />}
+            element={
+              authUser ? (
+                <ChitModalWrapper onClose={handleCloseModal} />
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
           />
-          <Route path="/login" element={<Login />} />
+          <Route
+            path="/login"
+            element={
+              !authUser ? (
+                <Login />
+              ) : (
+                <Navigate to="/"
+                />
+              )
+            }
+          />
         </Routes>
         <Toaster />
       </div>

@@ -1,30 +1,15 @@
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "./components/ui/button";
+import { formatMessageTime } from "./lib/utils";
 
-type Message = {
-  id: number;
-  sender: string;
-  subject: string;
-  timestamp: string;
-  message: string;
-  sendViaEB: boolean;
-};
 
-type ChitModalProps = {
-  messages: Message[];
-};
 
-const ChitModal: React.FC<ChitModalProps> = ({ messages }) => {
+const ChitModal  = ({ messages }:{messages:any}) => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
   // Find the chit from the messages array based on the ID
-  const chit = messages.find((msg) => msg.id === parseInt(id!));
-
-  if (!chit) {
-    return <div>Chit not found</div>;
-  }
 
   const handleClose = () => {
     navigate("/"); // Go back to the inbox
@@ -42,10 +27,9 @@ const ChitModal: React.FC<ChitModalProps> = ({ messages }) => {
 
       {/* Chit Info */}
       <div className="mb-4">
-        <div className="text-sm text-gray-500">{chit.timestamp}</div>
-        <div className="text-lg font-semibold">{chit.sender}</div>
-        <div className="text-md font-medium text-gray-700">{chit.subject}</div>
-        {chit.sendViaEB && (
+        <div className="text-sm text-gray-500">{formatMessageTime(messages.createdAt)}</div>
+        <div className="text-lg font-semibold">{messages.sender.username}</div>
+      {messages.isViaEB && (
           <span className="mt-2 inline-block bg-blue-100 text-blue-600 text-xs font-semibold px-2 py-1 rounded-full">
             Reviewed by Board
           </span>
@@ -57,7 +41,7 @@ const ChitModal: React.FC<ChitModalProps> = ({ messages }) => {
 
       {/* Message Body */}
       <div className="text-gray-800 leading-relaxed whitespace-pre-line">
-        {chit.message}
+        {messages.body}
       </div>
 
       {/* Back Button */}

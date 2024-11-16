@@ -7,7 +7,7 @@ export const login = async (req, res) => {
   try {
     const { username, password } = req.body;
     if (!username || !password) {
-      return res.status(400).json({ message: "All fields are required" });
+      return res.status(400).json({ message: "All fields are required",success:false });
     }
 
     const user = await prisma.user.findUnique({
@@ -20,11 +20,12 @@ export const login = async (req, res) => {
     }
     const passMatch = await bcrypt.compare(password, user.password);
     if (!passMatch) {
-      return res.status(401).json({ message: "Invalid credentials" });
+      return res.status(401).json({ message: "Invalid credentials",success:false });
     }
 
     const token = await generateToken(user.id, res);
     res.status(200).json({
+      success: true,    
       user: {
         id: user.id,
         username: user.username,
