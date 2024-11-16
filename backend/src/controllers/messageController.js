@@ -25,17 +25,19 @@ export const sendMessage = async (req, res) => {
     const sender = await prisma.user.findUnique({ where: { id: senderId } });
     if (!sender) return res.status(404).json({ message: "Sender not found" });
 
-    // Determine EB user if message is via EB
-    let EBId = null;
+    // Determine EB users if message is via EB
+    // Determine EB users if message is via EB
+    let EBs = [];
     if (isViaEB) {
-      const EBUser = await prisma.user.findFirst({
+      EBs = await prisma.user.findMany({
         where: { role: "EB", committee: sender.committee },
       });
-      if (!EBUser)
+
+      if (!EBs || EBs.length === 0) {
         return res
           .status(404)
           .json({ message: "No EB found for this committee" });
-      EBId = EBUser.id;
+      }
     }
 
     // Create or fetch conversation
@@ -67,6 +69,7 @@ export const sendMessage = async (req, res) => {
         },
       },
     });
+
     // Prepare the socket payload
     const socketPayload = {
       id: newMessage.id,
@@ -82,20 +85,32 @@ export const sendMessage = async (req, res) => {
       },
     };
 
-    // Emit the message to the receiver (or EB if via EB)
-    const receiverSocketId = getReceiverSocketId(isViaEB ? EBId : receiverId);
-    console.log(receiverSocketId,"sent message"); 
-    if (receiverSocketId) {
-      io.to(receiverSocketId).emit("newMessage", JSON.stringify(socketPayload));
+    // Emit the message to all EBs if isViaEB
+    if (isViaEB) {
+      const EBSocketIds = EBs.map((eb) => getReceiverSocketId(eb.id)); // Map only if EBs is an array
+
+      EBSocketIds.forEach((socketId) => {
+        if (socketId) {
+          io.to(socketId).emit("newMessage", JSON.stringify(socketPayload));
+        }
+      });
     }
 
-    res
-      .status(201)
-      .json({
-        message: "Message sent successfully",
-        data: socketPayload,
-        success: true,
-      });
+else{
+  const receiverSocketId = getReceiverSocketId(receiverId);
+  
+  if (receiverSocketId) {
+    io.to(receiverSocketId).emit("newMessage", JSON.stringify(socketPayload));
+  }
+
+}
+    // Emit the message to the receiver
+
+    res.status(201).json({
+      message: "Message sent successfully",
+      data: socketPayload,
+      success: true,
+    });
   } catch (error) {
     console.error("Error in sendMessage:", error);
     res.status(500).json({ message: "Internal server error" });

@@ -9,7 +9,6 @@ export const signup = async (req, res) => {
   try {
     const { username, password, portfolio, role, committee } = req.body;
     // Check if username and password are provided
-    console.log(username, password, portfolio, role, committee);
     if (!username || !password || !portfolio || !committee) {
       return res.status(400).json({ message: "All fields are required",success:false });
     }
@@ -60,18 +59,19 @@ export const updateMessageStatus = async (req, res) => {
     const updatedMessage = await prisma.message.update({
       where: { id: messageId, isViaEB: true },
       data: { status: "APPROVED", score },
-    });
-
-    const findConversation = await prisma.conversation.findFirst({
-      where: { id: updatedMessage.conversationId },
       include: {
-        participants: {
+        sender: {
           select: {
             id: true,
             username: true,
           },
-        },
+        }
       },
+    });
+
+    const findConversation = await prisma.conversation.findFirst({
+      where: { id: updatedMessage.conversationId },
+     
     });
 
     if (!findConversation) {
@@ -83,26 +83,29 @@ export const updateMessageStatus = async (req, res) => {
     );
 
     // Build the payload to match `getMessages` response structure
-    const payload = {
+    const socketPayload = {
       id: updatedMessage.id,
       body: updatedMessage.body,
-      createdAt: updatedMessage.createdAt,
       senderId: updatedMessage.senderId,
-      receiverId,
-      status: updatedMessage.status,
-      score: updatedMessage.score,
       conversationId: updatedMessage.conversationId,
+      isViaEB: updatedMessage.isViaEB,
+      status: updatedMessage.status,
+      createdAt: updatedMessage.createdAt,
+      sender: {
+        id: updatedMessage.sender.id,
+        username: updatedMessage.sender.username,
+      },
     };
 
     // Emit updates to the involved parties
     const receiverSocketId = getReceiverSocketId(receiverId);
     if (receiverSocketId) {
-      io.to(receiverSocketId).emit("messageStatusUpdated", payload);
+      io.to(receiverSocketId).emit("newMessage", JSON.stringify(socketPayload));
     }
 
     const senderSocketId = getReceiverSocketId(updatedMessage.senderId);
     if (senderSocketId) {
-      io.to(senderSocketId).emit("messageStatusUpdated", payload);
+      io.to(senderSocketId).emit("messageStatusUpdated", JSON.stringify(socketPayload));
     }
 
     res.status(200).json({

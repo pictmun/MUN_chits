@@ -13,7 +13,7 @@ const useListenMessages = () => {
         setConversations([JSON.parse(message),...conversations]);
       });
       
-  },[socket])
+  },[socket,conversations])
 
 }
 
