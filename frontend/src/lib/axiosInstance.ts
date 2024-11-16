@@ -1,6 +1,9 @@
 import axios from "axios";
 
 export const axiosInstance = axios.create({
-  baseURL: "http://localhost:5000/api",
+  baseURL: "https://mun-chits.vercel.app/",
   withCredentials: true,
 });
+
+
+// "http://localhost:5000";
