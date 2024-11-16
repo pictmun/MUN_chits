@@ -8,6 +8,10 @@ import { messages, Message } from "./data/messages";
 import Login from "./LoginPage";
 import { Toaster } from "./components/ui/sonner";
 import { useAuthContext } from "./context/AuthContext";
+import LogoutButton from "./components/LogoutButton";
+import { Topbar } from "./components/Topbar";
+import BoardModal from "./EBModal";
+import BoardInbox from "./BoardInbox";
 
 const App: React.FC = () => {
   const [selectedChit, setSelectedChit] = useState<Message | null>(null);
@@ -21,10 +25,14 @@ const App: React.FC = () => {
   const handleCloseModal = () => {
     setSelectedChit(null);
   };
-
+  const handleScoreSubmit = () => {};
+// const handleSelectMessage = () => {};
   return (
     <Router>
-      <div className="flex items-center justify-center h-screen w-full">
+
+      <div className="flex flex-col py-4  w-full">
+      <Topbar/>
+
         <Routes>
           <Route
             path="/"
@@ -55,15 +63,10 @@ const App: React.FC = () => {
           />
           <Route
             path="/login"
-            element={
-              !authUser ? (
-                <Login />
-              ) : (
-                <Navigate to="/"
-                />
-              )
-            }
+            element={!authUser ? <Login /> : <Navigate to="/" />}
           />
+          <Route path="/eb-board" element={<BoardInbox messages={messages} onMessageSelect={handleSelectMessage}/>}/>
+          <Route path="/eb/:id" element={<BoardModal messages={messages} onScoreSubmit={handleScoreSubmit}/>}/>
         </Routes>
         <Toaster />
       </div>

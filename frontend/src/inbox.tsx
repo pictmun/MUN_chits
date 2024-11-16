@@ -21,8 +21,17 @@ type InboxProps = {
 };
 
 const Inbox: React.FC<InboxProps> = ({ messages, onMessageSelect }) => {
-  const { selectedConversations, setConversations, messages:mess, setMessages } =  useConversation()
+  // const { selectedConversations, setConversations, messages:mess, setMessages } =  useConversation()
   const { conversations, loading } = useGetConversation();
+  // Sort conversations by timestamp
+  const sortedConversations = Array.isArray(conversations)
+    ? [...conversations].sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      )
+    : [];
+
+  console.log(sortedConversations)
   if(loading){
     return <div className="w-screen h-screen z-10 bg-white ">
       <Loader2 className="size-30" />
@@ -30,16 +39,16 @@ const Inbox: React.FC<InboxProps> = ({ messages, onMessageSelect }) => {
       
   }
   return (
-    <div className="w-[80%] max-w-xl mx-auto bg-white shadow-md rounded-lg overflow-hidden">
+    <div className="w-[80%] max-w-xl shadow-md mx-auto rounded-lg overflow-hidden relative">
       <header className="px-4 py-2 bg-gray-800 text-white font-semibold">
         Inbox
       </header>
-      {conversations?.length == 0 && (
+      {sortedConversations?.length == 0 && (
         <div className="p-4 text-gray-600">No messages to show</div>
       )}
 
       <ul className="divide-y divide-gray-200">
-        {conversations?.map((message) => (
+        {sortedConversations?.map((message) => (
           <ListItem key={message.id} message={message} />
         ))}
       </ul>

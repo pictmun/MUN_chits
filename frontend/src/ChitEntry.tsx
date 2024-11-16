@@ -1,114 +1,119 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-
-type Chit = {
-  recipient: string;
-  subject: string;
-  message: string;
-  sendViaBoard: boolean;
-};
+import { Link, useNavigate } from "react-router-dom";
+import { useSendChit } from "./hooks/useSendChit";
+import { useFetchRecipients } from "./hooks/useFetchReceipents";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "./components/ui/card";
 
 const ChitEntry = () => {
-  const [recipient, setRecipient] = useState("");
-  const [subject, setSubject] = useState("");
+  const [recipientId, setRecipientId] = useState("");
   const [message, setMessage] = useState("");
-  const [sendViaBoard, setSendViaBoard] = useState(false);
-
+  const [isViaEb, setIsViaEb] = useState(false);
+  const { sendChit, isLoading } = useSendChit();
+  const { recipients, loading: recipientsLoading } = useFetchRecipients();
+  console.log(recipients);
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    setRecipient("");
-    setSubject("");
-    setMessage("");
-    setSendViaBoard(false);
-
-    navigate("/inbox");
+    try {
+      await sendChit(message,isViaEb, recipientId);
+      navigate("/");
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setRecipientId("");
+      setMessage("");
+    }
   };
 
   return (
-    <div className="max-w-lg mx-auto bg-white shadow-md rounded-lg p-6">
-      <h2 className="text-2xl font-semibold mb-4">New Chit</h2>
+    <Card className="max-w-xl w-full mx-auto bg-white shadow-md rounded-lg p-6">
+      <CardHeader>
+        <CardTitle className="text-2xl font-semibold mb-4">New Chit</CardTitle>
+      </CardHeader>
 
       <form onSubmit={handleSubmit}>
-        {/* Recipient */}
-        <div className="mb-4">
-          <label
-            htmlFor="recipient"
-            className="block text-sm font-medium text-gray-700"
+        {/* Recipient Dropdown */}
+        <CardContent>
+          <div className="mb-4">
+            <label
+              htmlFor="recipient"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Recipient
+            </label>
+            <select
+              id="recipient"
+              value={recipientId}
+              onChange={(e) => setRecipientId(e.target.value)}
+              required
+              className="mt-1 py-3 px-3 block w-full border-2 border-black rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            >
+              <option value="" disabled>
+                {recipientsLoading
+                  ? "Loading recipients..."
+                  : "Select a recipient"}
+              </option>
+              {recipients.map((user: any) => (
+                <option key={user.id} value={user.id}>
+                  {user.username} {/* or any identifier like email/name */}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Message */}
+          <div className="mb-4">
+            <label
+              htmlFor="message"
+              className="block  text-sm font-medium text-gray-700"
+            >
+              Message
+            </label>
+            <textarea
+              id="message"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              required
+              rows={5}
+              placeholder="Enter your message..."
+              className="mt-1 py-3 px-3 border-2 border-black block w-full rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            ></textarea>
+          </div>
+          <div className="flex items-center gap-3">
+            <input 
+              type="checkbox"
+              id="via-eb"
+              checked={isViaEb}
+              onChange={() => setIsViaEb(!isViaEb)}
+            />
+            <label htmlFor="via-eb">Via EB</label>
+          </div>
+        </CardContent>
+
+        <CardFooter className="flex justify-between items-center gap-3">
+          <button
+            type="submit"
+            className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            disabled={isLoading}
           >
-            Recipient
-          </label>
-          <input
-            type="text"
-            id="recipient"
-            value={recipient}
-            onChange={(e) => setRecipient(e.target.value)}
-            required
-            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-          />
-        </div>
-
-        {/* Subject */}
-        <div className="mb-4">
-          <label
-            htmlFor="subject"
-            className="block text-sm font-medium text-gray-700"
+            {isLoading ? "Sending..." : "Submit Chit"}
+          </button>
+          <Link
+            to="/"
+            className="w-full block text-center  bg-gray-600 text-white py-2 px-4 rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
           >
-            Subject
-          </label>
-          <input
-            type="text"
-            id="subject"
-            value={subject}
-            onChange={(e) => setSubject(e.target.value)}
-            required
-            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-          />
-        </div>
-
-        {/* Message */}
-        <div className="mb-4">
-          <label
-            htmlFor="message"
-            className="block text-sm font-medium text-gray-700"
-          >
-            Message
-          </label>
-          <textarea
-            id="message"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            required
-            rows={5}
-            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-          ></textarea>
-        </div>
-
-        {/* Checkbox for sending via Board */}
-        <div className="flex items-center mb-4">
-          <input
-            type="checkbox"
-            id="sendViaBoard"
-            checked={sendViaBoard}
-            onChange={(e) => setSendViaBoard(e.target.checked)}
-            className="h-4 w-4 text-blue-600 border-gray-300 rounded"
-          />
-          <label htmlFor="sendViaBoard" className="ml-2 text-sm text-gray-700">
-            Send via Board
-          </label>
-        </div>
-
-        {/* Submit Button */}
-        <button
-          type="submit"
-          className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-        >
-          Submit Chit
-        </button>
+            Back to Inbox
+          </Link>
+        </CardFooter>
       </form>
-    </div>
+    </Card>
   );
 };
 

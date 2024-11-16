@@ -5,7 +5,7 @@ const LogoutButton = () => {
    const {logout}= useLogout()
 
   return (
-    <Button onClick={logout}>Logout</Button>
+    <Button onClick={logout} className=''>Logout</Button>
   )
 }
 

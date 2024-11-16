@@ -67,7 +67,7 @@ export const sendMessage = async (req, res) => {
 
     res
       .status(201)
-      .json({ message: "Message sent successfully", data: newMessage });
+      .json({ message: "Message sent successfully", data: newMessage ,success:true});
   } catch (error) {
     console.error("Error in sendMessage:", error);
     res.status(500).json({ message: "Internal server error" });
@@ -90,7 +90,7 @@ export const getMessages = async (req, res) => {
             status: "APPROVED",
           },
           orderBy: {
-            createdAt: "desc",
+            createdAt: "asc",
           },
         },
       },
@@ -106,24 +106,27 @@ export const getMessages = async (req, res) => {
 
 export const getUserForSidebar = async (req, res) => {
   try {
+    // Ensure the user is authenticated
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
     const authUserId = req.user.id;
 
     const users = await prisma.user.findMany({
       where: {
-        id: {
-          not: authUserId,
-        },
-        role: {
-          in: ["DELEGATE"],
-        },
+        id: { not: authUserId },
+        role: { in: ["DELEGATE"] },
       },
       select: {
         id: true,
         username: true,
-        portfolio: true,
-        committee: true,
+        portfolio: true, // Adjust if portfolio is a relation
+        committee: true, // Adjust if committee is a relation
       },
+      orderBy: { username: "asc" }, // Optional: Sort users alphabetically
     });
+
     res.status(200).json(users);
   } catch (error) {
     console.error("Error in getUserForSidebar:", error);
@@ -197,7 +200,6 @@ export const replyMessage = async (req, res) => {
 };
 
 export const getReceivedMessages = async (req, res) => {
-  console.log("received messages");
   try {
     const userId = req.user.id;
 
@@ -239,7 +241,6 @@ export const getReceivedMessages = async (req, res) => {
       }))
     );
 
-    console.log(receivedMessages);
     res.status(200).json({ messages: receivedMessages, success: true });
   } catch (error) {
     console.error("Error fetching received messages:", error);
