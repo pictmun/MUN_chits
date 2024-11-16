@@ -17,7 +17,7 @@ import {create} from "zustand";
 // }
 
 export const useConversation = create<any>((set) => ({
-    conversations:null,
+    conversations:[],
     setConversations: (conversations:any) => set({ conversations: conversations }),
     messages:[],
     setMessages: (messages:any) => set({ messages }),

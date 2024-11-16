@@ -8,7 +8,6 @@ export const sendMessage = async (req, res) => {
   try {
     const { message, isViaEB } = req.body;
     const { id: receiverId } = req.params;
-    console.log(isViaEB);
     const senderId = req.user.id;
 
     if (!message) {
@@ -41,7 +40,7 @@ export const sendMessage = async (req, res) => {
 
     // Create or fetch conversation
     const conversation = await prisma.conversation.create({
-      data: { participantIds: [senderId, receiverId],participants:[sender,receiver] },
+      data: { participantIds: [senderId, receiverId] },
     });
 
     // Update conversation ID for both users
@@ -85,6 +84,7 @@ export const sendMessage = async (req, res) => {
 
     // Emit the message to the receiver (or EB if via EB)
     const receiverSocketId = getReceiverSocketId(isViaEB ? EBId : receiverId);
+    console.log(receiverSocketId,"sent message"); 
     if (receiverSocketId) {
       io.to(receiverSocketId).emit("newMessage", JSON.stringify(socketPayload));
     }

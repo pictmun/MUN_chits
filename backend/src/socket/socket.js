@@ -28,6 +28,7 @@ io.on("connection", (socket) => {
   }
   // Sends event to all connected users
   io.emit("getOnlineUsers", Object.keys(userSocketMap));
+
   socket.on("disconnect", () => {
     delete userSocketMap[userId];
     io.emit("getOnlineUsers", Object.keys(userSocketMap));
