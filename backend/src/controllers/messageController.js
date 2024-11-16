@@ -1,12 +1,14 @@
 import prisma from "../db/prisma.js";
 import pkg from "@prisma/client";
-import { getReceiverSocketId } from "../socket/socket.js";
+import { getReceiverSocketId, io } from "../socket/socket.js";
 const { MessageStatus } = pkg;
+
 
 export const sendMessage = async (req, res) => {
   try {
     const { message, isViaEB } = req.body;
     const { id: receiverId } = req.params;
+    console.log(isViaEB);
     const senderId = req.user.id;
 
     if (!message) {
@@ -57,22 +59,50 @@ export const sendMessage = async (req, res) => {
         isViaEB,
         status: isViaEB ? MessageStatus.PENDING : MessageStatus.APPROVED,
       },
+      include: {
+        sender: {
+          select: {
+            id: true,
+            username: true,
+          },
+        },
+      },
     });
+console.log(newMessage);
+    // Prepare the socket payload
+    const socketPayload = {
+      id: newMessage.id,
+      body: newMessage.body,
+      senderId: newMessage.senderId,
+      conversationId: newMessage.conversationId,
+      isViaEB: newMessage.isViaEB,
+      status: newMessage.status,
+      createdAt: newMessage.createdAt,
+      sender: {
+        id: newMessage.sender.id,
+        username: newMessage.sender.username,
+      },
+    };
 
     // Emit the message to the receiver (or EB if via EB)
     const receiverSocketId = getReceiverSocketId(isViaEB ? EBId : receiverId);
     if (receiverSocketId) {
-      io.to(receiverSocketId).emit("newMessage", newMessage);
+      io.to(receiverSocketId).emit("newMessage", JSON.stringify(socketPayload));
     }
 
     res
       .status(201)
-      .json({ message: "Message sent successfully", data: newMessage ,success:true});
+      .json({
+        message: "Message sent successfully",
+        data: socketPayload,
+        success: true,
+      });
   } catch (error) {
     console.error("Error in sendMessage:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
 
 export const getMessages = async (req, res) => {
   try {

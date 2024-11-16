@@ -1,6 +1,7 @@
 import express from "express";
 import {
   getAllMessages,
+  getMessageFromId,
   signup,
   updateMessageStatus,
 } from "../controllers/adminController.js";
@@ -18,4 +19,5 @@ adminRouter.patch(
   updateMessageStatus
 );
 adminRouter.get("/get-messages", protectRoute, ebAuth, getAllMessages);
+adminRouter.get("/get-message/:id", protectRoute, ebAuth,getMessageFromId);
 export default adminRouter;

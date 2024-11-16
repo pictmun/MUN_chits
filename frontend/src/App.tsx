@@ -12,10 +12,12 @@ import LogoutButton from "./components/LogoutButton";
 import { Topbar } from "./components/Topbar";
 import BoardModal from "./EBModal";
 import BoardInbox from "./BoardInbox";
+import useListenMessages from "./hooks/useListenMessages";
 
 const App: React.FC = () => {
   const [selectedChit, setSelectedChit] = useState<Message | null>(null);
   const { isLoading, authUser } = useAuthContext();
+  
   const handleSelectMessage = (message: Message) => {
     setSelectedChit(message);
   };
@@ -39,8 +41,6 @@ const App: React.FC = () => {
             element={
               authUser ? (
                 <Inbox
-                  messages={messages}
-                  onMessageSelect={handleSelectMessage}
                 />
               ) : (
                 <Navigate to="/login" />
@@ -66,7 +66,7 @@ const App: React.FC = () => {
             element={!authUser ? <Login /> : <Navigate to="/" />}
           />
           <Route path="/eb-board" element={<BoardInbox messages={messages} onMessageSelect={handleSelectMessage}/>}/>
-          <Route path="/eb/:id" element={<BoardModal messages={messages} onScoreSubmit={handleScoreSubmit}/>}/>
+          <Route path="/eb/:id" element={<BoardModal/>}/>
         </Routes>
         <Toaster />
       </div>

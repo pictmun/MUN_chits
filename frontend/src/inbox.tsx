@@ -1,26 +1,14 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { useConversation } from "./zustand/useConversation";
 import {useGetConversation} from "./hooks/useGetConversation"
-import { Message } from "./data/messages";
 import { formatMessageTime } from "./lib/utils";
 import { Loader2 } from "lucide-react";
-// type Message = {
-//   id: number;
-//   sender: string;
-//   subject: string;
-//   timestamp: string;
-//   isUnread: boolean;
-//   message: string;
-//   sendViaEB: boolean;
-// };
+import useListenMessages from "./hooks/useListenMessages";
+import { useAuthContext } from "./context/AuthContext";
 
-type InboxProps = {
-  messages: Message[];
-  onMessageSelect: (message: Message) => void;
-};
 
-const Inbox: React.FC<InboxProps> = ({ messages, onMessageSelect }) => {
+
+const Inbox = () => {
   // const { selectedConversations, setConversations, messages:mess, setMessages } =  useConversation()
   const { conversations, loading } = useGetConversation();
   // Sort conversations by timestamp
@@ -30,8 +18,10 @@ const Inbox: React.FC<InboxProps> = ({ messages, onMessageSelect }) => {
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       )
     : [];
-
-  console.log(sortedConversations)
+    const { authUser } = useAuthContext();
+if (authUser) {
+  useListenMessages();
+}
   if(loading){
     return <div className="w-screen h-screen z-10 bg-white ">
       <Loader2 className="size-30" />
@@ -57,8 +47,9 @@ const Inbox: React.FC<InboxProps> = ({ messages, onMessageSelect }) => {
 };
 
 type ListItemProps = {
-  message: any;
-};
+  message:any
+  };
+
 const ListItem: React.FC<ListItemProps> = ({ message }) => {
   return (
     <li>

@@ -1,33 +1,61 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { axiosInstance } from "../lib/axiosInstance";
+import { useConversation } from "../zustand/useConversation";
 
 export const useGetConversation = () => {
   const [loading, setLoading] = useState<boolean>(false);
-  const [conversations, setConversations] = useState<ConversationType[] | null>(
-    null
-  );
+  const { conversations, setConversations } = useConversation();
+
+  const fetchConversations = async () => {
+    const res = await axiosInstance.get("/message/get");
+    if (!res.data.success) {
+      throw new Error(res.data.error || "Failed to fetch conversations");
+    }
+    return res.data.messages;
+  };
+
+  const refetch = async () => {
+    try {
+      setLoading(true);
+      const messages = await fetchConversations();
+      setConversations(messages);
+    } catch (error: any) {
+      console.error(error);
+      toast.error(error.message || "An unexpected error occurred");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
+    let isMounted = true;
+
     const getConversations = async () => {
       try {
         setLoading(true);
-        const res = await axiosInstance.get("/message/get");
-        if (!res.data.success) {
-          throw new Error(res.data.error || "Failed to fetch conversations");
+        const messages = await fetchConversations();
+        if (isMounted) {
+          setConversations(messages);
         }
-        // console.log(res.data.messages);
-        setConversations(res.data.messages);
       } catch (error: any) {
-        console.error(error);
-        toast.error(error.message || "An unexpected error occurred");
+        if (isMounted) {
+          console.error(error);
+          toast.error(error.message || "An unexpected error occurred");
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     getConversations();
-  }, []); // Add dependency array to ensure the effect runs only once
 
-  return { conversations, loading };
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  return { conversations, loading, refetch };
 };

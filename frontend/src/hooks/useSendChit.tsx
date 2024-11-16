@@ -9,9 +9,10 @@ export const useSendChit = () => {
   const sendChit = async (message: string,isViaEb: boolean, recipient: string) => {
     setIsLoading(true);
     try {
+      console.log( isViaEb);
       const res = await axiosInstance.post(`/message/send/${recipient}`, {
         message,
-        isViaEb
+        isViaEB:isViaEb
       });
       if (!res.data.success) {
         throw new Error(res.data.error || "Failed to send chit");

@@ -1,4 +1,5 @@
 import {create} from "zustand";
+import { ConversationType } from "../types/global";
 
 
 
@@ -10,15 +11,15 @@ type MessageType = {
     // shouldShake:boolean
 }
 interface ConversationState {
-    selectedConversations: ConversationType|null;
+    conversations: ConversationType|null;
     setConversations: (conversations: ConversationType|null) => void;
     messages: MessageType[]|null;
     setMessages: (messages: MessageType[]) => void;
 }
 
 export const useConversation = create<ConversationState>((set) => ({
-    selectedConversations:null,
-    setConversations: (conversations) => set({ selectedConversations: conversations }),
+    conversations:null,
+    setConversations: (conversations) => set({ conversations: conversations }),
     messages:[],
     setMessages: (messages) => set({ messages }),
 }));

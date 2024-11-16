@@ -9,6 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from "./components/ui/card";
+import { useSocketContext } from "./context/SocketContext";
 
 const ChitEntry = () => {
   const [recipientId, setRecipientId] = useState("");
@@ -16,12 +17,12 @@ const ChitEntry = () => {
   const [isViaEb, setIsViaEb] = useState(false);
   const { sendChit, isLoading } = useSendChit();
   const { recipients, loading: recipientsLoading } = useFetchRecipients();
-  console.log(recipients);
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      console.log(recipientId, message,isViaEb);
       await sendChit(message,isViaEb, recipientId);
       navigate("/");
     } catch (error) {
@@ -31,7 +32,7 @@ const ChitEntry = () => {
       setMessage("");
     }
   };
-
+  const {onlineUsers} = useSocketContext()
   return (
     <Card className="max-w-xl w-full mx-auto bg-white shadow-md rounded-lg p-6">
       <CardHeader>
@@ -61,8 +62,10 @@ const ChitEntry = () => {
                   : "Select a recipient"}
               </option>
               {recipients.map((user: any) => (
-                <option key={user.id} value={user.id}>
+                <option key={user.id} value={user.id} className="flex justify-between items-center w-full">
                   {user.username} {/* or any identifier like email/name */}
+
+                  {/* {onlineUsers.includes(user.id) && <span className="bg-green ml-2">Online</span>} */}
                 </option>
               ))}
             </select>
