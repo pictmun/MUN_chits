@@ -9,6 +9,7 @@ import { useAuthContext } from "./context/AuthContext";
 import { Topbar } from "./components/Topbar";
 import BoardModal from "./EBModal";
 import BoardInbox from "./BoardInbox";
+import CreateEntries from "./pages/CreateEntries";
 
 const App: React.FC = () => {
   const { isLoading, authUser } = useAuthContext();
@@ -24,12 +25,12 @@ const App: React.FC = () => {
       <Topbar/>
 
         <Routes>
+            <Route path="/eb-board" element={authUser && authUser.role === "EB" ? <BoardInbox />: <Navigate to="/login"/>}/>
+            <Route path="/eb/:id" element={authUser && authUser.role === "EB" ? <BoardModal/>: <Navigate to="/login"/>}/>
           <Route
             path="/"
             element={
-              authUser ? (
-                <Inbox
-                />
+              authUser ? (authUser.role === "EB" ? <Navigate to="/eb-board" />:<Inbox/>
               ) : (
                 <Navigate to="/login" />
               )
@@ -49,12 +50,11 @@ const App: React.FC = () => {
               )
             }
           />
+          <Route path="/create-user" element={authUser&& authUser.role === "ADMIN" ? <CreateEntries />: <Navigate to="/login"/>}/>
           <Route
             path="/login"
             element={!authUser ? <Login /> : <Navigate to="/" />}
           />
-          <Route path="/eb-board" element={<BoardInbox />}/>
-          <Route path="/eb/:id" element={<BoardModal/>}/>
         </Routes>
         <Toaster />
       </div>

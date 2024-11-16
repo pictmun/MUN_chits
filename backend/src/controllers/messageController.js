@@ -41,7 +41,7 @@ export const sendMessage = async (req, res) => {
 
     // Create or fetch conversation
     const conversation = await prisma.conversation.create({
-      data: { participantIds: [senderId, receiverId] },
+      data: { participantIds: [senderId, receiverId],participants:[sender,receiver] },
     });
 
     // Update conversation ID for both users
@@ -68,7 +68,6 @@ export const sendMessage = async (req, res) => {
         },
       },
     });
-console.log(newMessage);
     // Prepare the socket payload
     const socketPayload = {
       id: newMessage.id,
@@ -147,6 +146,7 @@ export const getUserForSidebar = async (req, res) => {
       where: {
         id: { not: authUserId },
         role: { in: ["DELEGATE"] },
+        committee: req.user.committee,
       },
       select: {
         id: true,

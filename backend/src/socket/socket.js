@@ -5,7 +5,8 @@ import cors from "cors";
 const app = express();
 app.use(
   cors({
-    origin: "https://mun-chits.vercel.app",
+    // origin: "https://mun-chits.vercel.app",
+    origin: "http://localhost:5173",
     methods: ["GET", "POST", "PATCH", "DELETE", "PUT"],
     credentials: true, // Allow cookies
   })
@@ -13,7 +14,8 @@ app.use(
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "https://mun-chits.vercel.app",
+    // origin: "https://mun-chits.vercel.app",
+    origin: "http://localhost:5173",
     methods: ["GET", "POST", "PATCH", "DELETE", "PUT"],
     credentials: true, // Allow cookies
   },

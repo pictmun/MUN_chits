@@ -1,29 +1,39 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useFetchOneEbMessage } from "./hooks/useFetchOneEbMessage";
 import { useMessageScoreUpdate } from "./hooks/useScoreUpdate";
+import { useFetchEbUserMessages } from "./hooks/useFetchEbMessages";
+import { formatMessageTime } from "./lib/utils";
 
 
-
+interface Message {
+  id: string;
+  body: string;
+  createdAt: string;
+  isViaEB: boolean;
+  sender?: { username: string };
+  receiver?: { username: string };
+}
 
 const BoardModal = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [score, setScore] = useState<number | "">("");
-  const { message, loading, fetchMessages } = useFetchOneEbMessage();
+  // const { message, loading, fetchMessages } = useFetchOneEbMessage();
+  const messages=useFetchEbUserMessages() as Message[]
+  const message = messages.find((message) => message.id === id);
   const { updateMessageScore, loading: scoreLoading } = useMessageScoreUpdate();
 
   // Fetch the message based on the ID from URL
-  useEffect(() => {
-    if (id && !message) {
-      fetchMessages(id);
-    }
-  }, [id, message, fetchMessages]);
+  // useEffect(() => {
+  //   if (id && !message) {
+  //     fetchMessages(id);
+  //   }
+  // }, [id, message, fetchMessages]);
 
-  // If no message found, show "Chit not found" message
-  if (loading) return <div>Loading...</div>;
+  // // If no message found, show "Chit not found" message
+  // if (loading) return <div>Loading...</div>;
   if (!message) {
-    return <div>Chit not found</div>;
+    return <div className="text-2xl font-semibold">Loading...</div>;
   }
 
   const handleClose = () => {
@@ -58,8 +68,15 @@ const BoardModal = () => {
 
       {/* Chit Info */}
       <div className="mb-4">
-        <div className="text-sm text-gray-500">{message.createdAt}</div>
-        <div className="text-lg font-semibold">{message.sender?.username}</div>
+        <div className="text-sm text-gray-500">{formatMessageTime(message.createdAt)}</div>
+        <div className="text-lg font-semibold">
+          <span className="mr-2 text-gray-500">Sender:</span>{message.sender?.username}
+        </div>
+        <div className="text-lg font-semibold">
+          <span className="mr-2 text-gray-500">Receiver:</span>
+          {message.receiver?.username}
+        </div>
+
         {message.isViaEB && (
           <span className="mt-2 inline-block bg-blue-100 text-blue-600 text-xs font-semibold px-2 py-1 rounded-full">
             Reviewed by Board

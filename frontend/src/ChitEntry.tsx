@@ -34,12 +34,22 @@ const ChitEntry = () => {
   return (
     <Card className="max-w-xl w-full mx-auto bg-white shadow-md rounded-lg p-6">
       <CardHeader>
-        <CardTitle className="text-2xl font-semibold mb-4">New Chit</CardTitle>
+        <CardTitle className="text-2xl font-semibold mb-2">New Chit</CardTitle>
       </CardHeader>
 
       <form onSubmit={handleSubmit}>
         {/* Recipient Dropdown */}
         <CardContent>
+          <div className="flex items-center gap-3 mb-2">
+            <input
+              type="checkbox"
+              id="via-eb"
+              className="size-5"
+              checked={isViaEb}
+              onChange={() => setIsViaEb(!isViaEb)}
+            />
+            <label htmlFor="via-eb" className="text-lg">Send message via EB</label>
+          </div>
           <div className="mb-4">
             <label
               htmlFor="recipient"
@@ -60,9 +70,12 @@ const ChitEntry = () => {
                   : "Select a recipient"}
               </option>
               {recipients.map((user: any) => (
-                <option key={user.id} value={user.id} className="flex justify-between items-center w-full">
+                <option
+                  key={user.id}
+                  value={user.id}
+                  className="flex justify-between items-center w-full"
+                >
                   {user.username} {/* or any identifier like email/name */}
-
                   {/* {onlineUsers.includes(user.id) && <span className="bg-green ml-2">Online</span>} */}
                 </option>
               ))}
@@ -86,15 +99,6 @@ const ChitEntry = () => {
               placeholder="Enter your message..."
               className="mt-1 py-3 px-3 border-2 border-black block w-full rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
             ></textarea>
-          </div>
-          <div className="flex items-center gap-3">
-            <input 
-              type="checkbox"
-              id="via-eb"
-              checked={isViaEb}
-              onChange={() => setIsViaEb(!isViaEb)}
-            />
-            <label htmlFor="via-eb">Via EB</label>
           </div>
         </CardContent>
 

@@ -63,7 +63,7 @@ const ListItem: React.FC<ListItemProps> = ({ message }) => {
         <div className="flex-1">
           <div className="flex justify-between">
             <span className="font-semibold text-gray-800">
-              {message.sender.user}
+              {message.sender.username}
             </span>
             <span className="text-xs text-gray-500">
               {formatMessageTime(message.createdAt)}
@@ -71,9 +71,9 @@ const ListItem: React.FC<ListItemProps> = ({ message }) => {
           </div>
           <div className="flex justify-between">
             <span className="font-semibold text-gray-600">{message.body}</span>
-            {/* {message.isUnread && (
+            {message.status==="PENDING" && (
             <span className="ml-2 bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded-full">Unread</span>
-          )} */}
+          )}
           </div>
         </div>
         {/* Link to the ChitModal */}
