@@ -7,7 +7,7 @@ const [loading, setLoading] = useState(false);
     const updateMessageScore = async (messageId: string, score: number) => {
         setLoading(true);
         try {
-            const response = await axiosInstance.patch(
+             await axiosInstance.patch(
               `admin/update-message-status/${messageId}`,
               { score }
             );

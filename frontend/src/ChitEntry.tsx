@@ -9,7 +9,6 @@ import {
   CardHeader,
   CardTitle,
 } from "./components/ui/card";
-import { useSocketContext } from "./context/SocketContext";
 
 const ChitEntry = () => {
   const [recipientId, setRecipientId] = useState("");
@@ -32,7 +31,6 @@ const ChitEntry = () => {
       setMessage("");
     }
   };
-  const {onlineUsers} = useSocketContext()
   return (
     <Card className="max-w-xl w-full mx-auto bg-white shadow-md rounded-lg p-6">
       <CardHeader>

@@ -15,12 +15,9 @@ import { useAuthContext } from './context/AuthContext';
 //   sendViaEB: boolean;
 // };
 
-type InboxProps = {
-  messages: any;
-  onMessageSelect:any;
-};
 
-const BoardInbox: React.FC<InboxProps> = ({ onMessageSelect }) => {
+
+const BoardInbox= () => {
   // Filter messages to show only those marked for Board review
   // const boardMessages = messages.filter((message) => message.sendViaEB);
    const { authUser } = useAuthContext();
@@ -40,7 +37,6 @@ const BoardInbox: React.FC<InboxProps> = ({ onMessageSelect }) => {
           <ListItem
             key={message.id}
             message={message}
-            onMessageSelect={onMessageSelect}
           />
         ))}
       </ul>
@@ -50,15 +46,13 @@ const BoardInbox: React.FC<InboxProps> = ({ onMessageSelect }) => {
 
 type ListItemProps = {
   message: any;
-  onMessageSelect: (message: any) => void;
 };
 
-const ListItem: React.FC<ListItemProps> = ({ message, onMessageSelect }) => {
+const ListItem: React.FC<ListItemProps> = ({ message }) => {
   return (
     <li className="">
       <Link
         to={`/eb/${message.id}`}
-        onClick={() => onMessageSelect(message)}
         className="flex items-center p-4 hover:bg-gray-100 cursor-pointer"
       >
         {/* Avatar */}

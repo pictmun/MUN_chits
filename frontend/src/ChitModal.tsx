@@ -1,12 +1,11 @@
-import React from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import {  useNavigate } from "react-router-dom";
 import { Button } from "./components/ui/button";
 import { formatMessageTime } from "./lib/utils";
 
 
 
 const ChitModal  = ({ messages }:{messages:any}) => {
-  const { id } = useParams<{ id: string }>();
+  // const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
   // Find the chit from the messages array based on the ID

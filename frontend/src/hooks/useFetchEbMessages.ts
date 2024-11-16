@@ -4,7 +4,7 @@ import { axiosInstance } from "../lib/axiosInstance";
 // axios.defaults.withCredentials = true;
 export const useFetchEbUserMessages = () => {
   const [messages, setMessages] = useState([]);
-  const { isLoading, authUser } = useAuthContext();
+  const {  authUser } = useAuthContext();
   useEffect(() => {
     async function fetchMessages() {
       if (!authUser) {

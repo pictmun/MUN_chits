@@ -3,25 +3,14 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useFetchOneEbMessage } from "./hooks/useFetchOneEbMessage";
 import { useMessageScoreUpdate } from "./hooks/useScoreUpdate";
 
-type Message = {
-  id: number;
-  sender: { username: string };
-  body: string;
-  createdAt: string;
-  isViaEB: boolean;
-  isUnread: boolean;
-};
 
-type BoardModalProps = {
-  messages: Message[];
-  onScoreSubmit: (id: number, score: number) => void; // Callback to handle score submission
-};
+
 
 const BoardModal = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [score, setScore] = useState<number | "">("");
-  const { message, loading, fetchMessages } = useFetchOneEbMessage(id!);
+  const { message, loading, fetchMessages } = useFetchOneEbMessage();
   const { updateMessageScore, loading: scoreLoading } = useMessageScoreUpdate();
 
   // Fetch the message based on the ID from URL

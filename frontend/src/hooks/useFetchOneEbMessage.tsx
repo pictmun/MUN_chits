@@ -2,7 +2,7 @@ import { useState } from "react";
 import { axiosInstance } from "../lib/axiosInstance";
 import { useConversation } from "../zustand/useConversation";
 
-export const useFetchOneEbMessage = (id: string) => {
+export const useFetchOneEbMessage = () => {
     const {conversations:message,setConversations:setMessage}=useConversation();
     const [loading, setLoading] = useState(false);
     const fetchMessages = async (id: string) => {

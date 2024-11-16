@@ -5,14 +5,13 @@ import ChitModal from "./ChitModal";
 import { useGetChit } from "./hooks/useGetChit";
 
 interface ChitModalWrapperProps {
-  onClose: () => void;
 }
 
-const ChitModalWrapper: React.FC<ChitModalWrapperProps> = ({ onClose }) => {
+const ChitModalWrapper: React.FC<ChitModalWrapperProps> = () => {
   const { id } = useParams<{ id: string }>();
 const {loading,chit}=useGetChit(id!)
 
-
+ if(loading) return <div>Loading...</div>;
   if (!id ) {
     return <div>Invalid chit ID</div>;
   }
@@ -23,7 +22,7 @@ const {loading,chit}=useGetChit(id!)
     return <div>Chit not found</div>;
   }
 
-  return <ChitModal messages={chit} onClose={onClose} />;
+  return <ChitModal messages={chit} />;
 };
 
 export default ChitModalWrapper;

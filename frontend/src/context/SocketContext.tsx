@@ -1,15 +1,14 @@
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import io, { Socket } from "socket.io-client";
 import { useAuthContext } from "./AuthContext";
-import { ArrowUp } from "lucide-react";
 
 interface ISocketContext {
   socket: Socket | null;
   onlineUsers: string[];
 }
 const SocketContext = createContext<ISocketContext | undefined>(undefined);
-const socketUrl =
-   "http://localhost:5000"
+// const socketUrl ="http://localhost:5000"//dev
+const socketUrl="/"
 
 const SocketContextProvider = ({ children }: { children: React.ReactNode }) => {
   const socketRef = useRef<Socket | null>(null);
