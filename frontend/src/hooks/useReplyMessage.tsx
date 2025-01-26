@@ -3,7 +3,7 @@ import { axiosInstance } from "../lib/axiosInstance";
 import { toast } from "sonner";
 import { useConversation } from "../zustand/useConversation";
 
-export const useReplyMessage = (onLocalUpdate?: (message: any) => void) => {
+export const useReplyMessage = () => {
   const [loading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const { setConversations } = useConversation();
