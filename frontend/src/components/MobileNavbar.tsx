@@ -1,0 +1,106 @@
+import { Mail, Menu, Send, Plus } from "lucide-react";
+import { Button } from "./ui/button";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "./ui/sheet";
+import { useLocation } from "react-router-dom";
+import { useAuthContext } from "../context/AuthContext";
+import LogoutButton from "./LogoutButton";
+import { Link } from "react-router-dom";
+
+export const MobileNavbar = () => {
+      const sidebarLinks = [
+        {
+          name: "Inbox",
+          path: "/",
+          icon: <Mail className="size-5" />,
+        },
+        {
+          name: "Sent Chits",
+          path: "/sent-chits",
+          icon: <Send />,
+        },
+        {
+          name: "Create a Chit",
+          path: "/chit-entry",
+          icon: <Plus />,
+        },
+        {
+          name:"Inbox",
+          path:"/eb-board",
+          icon:<Mail className="size-5" />
+        },
+        {
+          name:"Rejected Chits",
+          path:"/rejected-chits",
+          icon:<Mail className="size-5" />
+        }
+      ];
+      const { authUser } = useAuthContext();
+      const url = useLocation().pathname;           
+  return (
+    <Sheet>
+      <SheetTrigger className="md:hidden">
+        <Button variant={"outline"} size={"icon"} className="size-8">
+          <Menu className="h-6 w-6" />
+        </Button>
+      </SheetTrigger>
+      <SheetContent>
+        <SheetHeader className="sr-only">
+          <SheetTitle>Are you absolutely sure?</SheetTitle>
+        </SheetHeader>
+
+        <SheetDescription className="py-8 h-screen">
+          <ul className="flex flex-col items-start gap-5">
+            {authUser?.role=="DELEGATE"&&sidebarLinks.slice(0, 3).map((link, index) => (
+              <li
+                key={index}
+                className={`${
+                  url === link.path ? "bg-muted font-semibold" : ""
+                } text-lg  text-primary p-3 rounded-lg w-full`}
+              >
+                <Link
+                  to={link.path}
+                  className="flex items-center justify-start gap-2"
+                >
+                  {link.icon}
+                  {link.name}
+                </Link>
+              </li>
+            ))}
+            {
+              authUser?.role=="EB"&&sidebarLinks.slice(3).map((link, index) => (
+                <li
+                  key={index}
+                  className={`${
+                    url === link.path ? "bg-muted font-semibold" : ""
+                  } text-lg  text-primary p-3 rounded-lg w-full`}
+                >
+                  <Link
+                    to={link.path}
+                    className="flex items-center justify-start gap-2"
+                  >
+                    {link.icon}
+                    {link.name}
+                  </Link>
+                </li>
+              ))
+            }
+          </ul>
+          <div className="mt-56 flex flex-col gap-3">
+            <div className="flex items-center justify-start w-full bg-muted py-1 px-2 rounded-full gap-2">
+              <div className="size-10 flex items-center justify-center fonr-bold text-2xl bg-slate-200 dark:bg-slate-800 rounded-full">
+                {authUser?.username.charAt(0)}
+              </div>
+              <div className="flex flex-col gap-0">
+                <p className="font-semibold text-lg">{authUser?.username}</p>
+                <p className="text-sm text-muted-foreground uppercase">
+                  {authUser?.portfolio}
+                </p>
+              </div>
+            </div>
+            <LogoutButton classList="w-full" />
+          </div>
+        </SheetDescription>
+      </SheetContent>
+    </Sheet>
+  );
+}

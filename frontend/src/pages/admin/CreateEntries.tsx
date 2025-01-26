@@ -5,11 +5,11 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "../components/ui/card";
-import { Input } from "../components/ui/input";
-import { Label } from "../components/ui/label";
-import { Button } from "../components/ui/button";
-import { useCreateUser } from "../hooks/useCreateUser";
+} from "../../components/ui/card";
+import { Input } from "../../components/ui/input";
+import { Label } from "../../components/ui/label";
+import { Button } from "../../components/ui/button";
+import { useCreateUser } from "../../hooks/useCreateUser";
 export type FormDataType = {
   username:string,
   portfolio: string,

@@ -3,18 +3,17 @@ import { toast } from "sonner";
 import { axiosInstance } from "../lib/axiosInstance";
 import { useConversation } from "../zustand/useConversation";
 
-export const useGetConversation = () => {
+export const useSentConversation = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const { conversations, setConversations } = useConversation();
 
   const fetchConversations = async () => {
-    const res = await axiosInstance.get("/message/get");
+    const res = await axiosInstance.post("/message/sent");
     if (!res.data.success) {
-      throw new Error(res.data.error || "Failed to fetch conversations");
+      throw new Error(res.data.error);
     }
     return res.data.conversations;
   };
-
   const refetch = async () => {
     try {
       setLoading(true);

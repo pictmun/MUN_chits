@@ -1,9 +1,10 @@
 import express from "express";
 import { protectRoute } from "../middleware/protectRouteMiddleware.js";
 import {
-  getMessageFromId,
+  getConversationFromId,
   getMessages,
   getReceivedMessages,
+  getSentConversations,
   getUserForSidebar,
   replyMessage,
   sendMessage,
@@ -14,7 +15,8 @@ const messageRouter = express.Router();
 messageRouter.get("/conversations", protectRoute, getUserForSidebar);
 messageRouter.get("/get", protectRoute, getReceivedMessages);
 messageRouter.get("/:id", protectRoute, getMessages);
-messageRouter.get("/chit/:id", protectRoute, getMessageFromId);
+messageRouter.post("/sent",protectRoute,getSentConversations);
+messageRouter.get("/chit/:id", protectRoute, getConversationFromId);
 messageRouter.post("/send/:id", protectRoute, sendMessage);
 messageRouter.post("/reply/:id", protectRoute, replyMessage);
 export default messageRouter;

@@ -4,12 +4,12 @@ import { useState } from "react";
 
 export const useMessageScoreUpdate = () => {
 const [loading, setLoading] = useState(false);
-    const updateMessageScore = async (messageId: string, score: number) => {
+    const updateMessageScore = async (messageId: string, score: number,status:string) => {
         setLoading(true);
         try {
              await axiosInstance.patch(
               `admin/update-message-status/${messageId}`,
-              { score }
+              { score,status }
             );
             toast.success("Message score updated successfully");
         } catch (error) {

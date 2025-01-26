@@ -5,25 +5,25 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "./components/ui/card";
-import { Label } from "./components/ui/label";
-import { Input } from "./components/ui/input";
-import { Button } from "./components/ui/button";
+} from "../../components/ui/card";
+import { Label } from "../../components/ui/label";
+import { Input } from "../../components/ui/input";
+import { Button } from "../../components/ui/button";
 
-import { useLogin } from "./hooks/useLogin";
+import { useLogin } from "../../hooks/useLogin";
 
-const Login: React.FC = () => {
+const Login = () => {
   const [username, setUsername] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const {isLoading:loading,login}=useLogin();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log(username, password);
     login(username, password);
   }
   return (
-    <Card className="flex flex-col gap-3 max-w-lg w-[80%] mx-auto rounded-md">
+    
+    <Card className="flex flex-col md:ml-[36%] mt-[6%] mx-auto gap-3 p-6 max-w-lg w-[100%]  rounded-md">
       <CardHeader>
         <CardTitle className="text-2xl text-center">Login</CardTitle>
       </CardHeader>
@@ -37,7 +37,7 @@ const Login: React.FC = () => {
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="p-2 border border-black"
+              className="p-2 border border-primary"
             />
           </div>
           <div>
@@ -48,7 +48,7 @@ const Login: React.FC = () => {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="p-2 border border-black"
+              className="p-2 border border-primary"
             />
           </div>
         </CardContent>
@@ -59,6 +59,7 @@ const Login: React.FC = () => {
         </CardFooter>
       </form>
     </Card>
+
   );
 };
 

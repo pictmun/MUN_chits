@@ -1,6 +1,6 @@
 import { toast } from "sonner";
 import { axiosInstance } from "../lib/axiosInstance";
-import { FormDataType } from "../pages/CreateEntries"
+import { FormDataType } from "../pages/admin/CreateEntries"
 
 export const useCreateUser = () => {
     const createUser = async (formData:FormDataType) => {

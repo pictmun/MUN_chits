@@ -10,7 +10,7 @@ export const signup = async (req, res) => {
     const { username, password, portfolio, role, committee } = req.body;
     // Check if username and password are provided
     if (!username || !password || !portfolio || !committee) {
-      return res.status(400).json({ message: "All fields are required",success:false });
+      return res.status(400).json({ message: "All fields are required" });
     }
     // Check if user already exists
     const user = await prisma.user.findUnique({
@@ -19,7 +19,7 @@ export const signup = async (req, res) => {
       },
     });
     if (user) {
-      return res.status(400).json({ message: "User already exists",success:false });
+      return res.status(400).json({ message: "User already exists" });
     }
     // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -42,7 +42,6 @@ export const signup = async (req, res) => {
         role: newUser.role,
         committee: newUser.committee,
         message: "User created successfully",
-        success: true,
       });
     }
   } catch (error) {
@@ -53,25 +52,24 @@ export const signup = async (req, res) => {
 
 export const updateMessageStatus = async (req, res) => {
   const { id: messageId } = req.params;
-  const { score } = req.body;
+  const { score,status } = req.body;
 
   try {
     const updatedMessage = await prisma.message.update({
       where: { id: messageId, isViaEB: true },
-      data: { status: "APPROVED", score },
-      include: {
-        sender: {
-          select: {
-            id: true,
-            username: true,
-          },
-        }
-      },
+      data: { status:status, score },
     });
 
     const findConversation = await prisma.conversation.findFirst({
       where: { id: updatedMessage.conversationId },
-     
+      include: {
+        participants: {
+          select: {
+            id: true,
+            username: true,
+          },
+        },
+      },
     });
 
     if (!findConversation) {
@@ -83,29 +81,26 @@ export const updateMessageStatus = async (req, res) => {
     );
 
     // Build the payload to match `getMessages` response structure
-    const socketPayload = {
+    const payload = {
       id: updatedMessage.id,
       body: updatedMessage.body,
-      senderId: updatedMessage.senderId,
-      conversationId: updatedMessage.conversationId,
-      isViaEB: updatedMessage.isViaEB,
-      status: updatedMessage.status,
       createdAt: updatedMessage.createdAt,
-      sender: {
-        id: updatedMessage.sender.id,
-        username: updatedMessage.sender.username,
-      },
+      senderId: updatedMessage.senderId,
+      receiverId,
+      status: updatedMessage.status,
+      score: updatedMessage.score,
+      conversationId: updatedMessage.conversationId,
     };
 
     // Emit updates to the involved parties
     const receiverSocketId = getReceiverSocketId(receiverId);
     if (receiverSocketId) {
-      io.to(receiverSocketId).emit("newMessage", JSON.stringify(socketPayload));
+      io.to(receiverSocketId).emit("messageStatusUpdated", payload);
     }
 
     const senderSocketId = getReceiverSocketId(updatedMessage.senderId);
     if (senderSocketId) {
-      io.to(senderSocketId).emit("messageStatusUpdated", JSON.stringify(socketPayload));
+      io.to(senderSocketId).emit("messageStatusUpdated", payload);
     }
 
     res.status(200).json({
@@ -120,104 +115,138 @@ export const updateMessageStatus = async (req, res) => {
 
 export const getAllMessages = async (req, res) => {
   try {
-    // Ensure the user is authenticated
-    const { id: userId } = req.user;
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { committee: true }, // Only select the committee field
-    });
-
-    // Check if the user exists and has a committee
-    if (!user || !user.committee) {
-      return res.status(404).json({ message: "User or committee not found" });
-    }
-
-    // Fetch messages only from the user's committee and include sender and conversation data
-    const pendingMessages = await prisma.message.findMany({
-      where: {
-        isViaEB: true,
-        sender: {
-          committee: user.committee, // Filter messages by sender's committee
-        },
-      },
-      include: {
-        sender: {
-          select: {
-            id: true,
-            username: true, // Include the sender's username
-            committee: true, // Include the sender's committee for verification
+    // Fetch conversations with pending messages
+    const conversationsWithPendingMessages = await prisma.conversation.findMany(
+      {
+        where: {
+          messages: {
+            some: {
+              isViaEB: true,
+            },
           },
         },
-        conversation: {
-          select: {
-            id: true, // Include conversation ID
-            participantIds: true, // Include participant IDs
-          },
-        },
-      },
-    });
-
-    // Construct response payload to show sender and receiver usernames with the message body
-    const formattedMessages = [];
-
-    for (const message of pendingMessages) {
-      const receiverId = message.conversation.participantIds.find(
-        (id) => id !== message.sender.id
-      );
-
-      const receiver = receiverId
-        ? await prisma.user.findUnique({
-            where: { id: receiverId },
+        include: {
+          participants: {
             select: {
               id: true,
-              username: true,
+              username: true, // Include participant's username
             },
-          })
-        : null;
-
-      formattedMessages.push({
-        id: message.id,
-        body: message.body,
-        createdAt: message.createdAt,
-        sender: {
-          id: message.sender.id,
-          username: message.sender.username,
+          },
+          messages: {
+            where: {
+              isViaEB: true,
+            },
+            include: {
+              sender: {
+                select: {
+                  id: true,
+                  username: true, // Include sender's username
+                },
+              },
+            },
+          },
         },
-        receiver: receiver
-          ? {
-              id: receiver.id,
-              username: receiver.username,
-            }
-          : null,
-          status: message.status,
-      });
-    }
+      }
+    );
 
-    // Send the formatted messages
-    res.status(200).json(formattedMessages);
+    // Format conversations to include receiver information
+    const formattedConversations = await Promise.all(
+      conversationsWithPendingMessages.map(async (conversation) => {
+        // Determine the sender ID from the first message
+        const senderId = conversation.messages[0]?.sender.id;
+
+        // Find the receiver ID from participants
+        const receiverId = conversation.participantIds.find(
+          (participant) => participant !== senderId
+        );
+
+        if (!receiverId) return null; // Skip if receiver ID is not found
+
+        // Fetch receiver details
+        const receiver = await prisma.user.findUnique({
+          where: { id: receiverId },
+          select: {
+            id: true,
+            username: true,
+            portfolio: true,
+          },
+        });
+
+        // Ensure receiver and portfolio match
+        if (!receiver || receiver.portfolio !== req.user.portfolio) {
+          return null; // Skip if receiver is invalid or portfolio doesn't match
+        }
+
+        // Return formatted conversation
+        return {
+          conversationId: conversation.id,
+          messages: conversation.messages,
+          receiver,
+          sender: {
+            id: senderId,
+            username: conversation.messages[0]?.sender.username,
+          },
+        };
+      })
+    );
+
+    // Filter out null results
+    const validConversations = formattedConversations.filter(Boolean);
+
+    res
+      .status(200)
+      .json({ success: true, conversations: validConversations });
   } catch (error) {
     console.error("Error in getAllMessages:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
 
-
-
 export const getMessageFromId = async (req, res) => {
   try {
     const { id } = req.params;
-    const message = await prisma.message.findUnique({
+    const conversation = await prisma.conversation.findUnique({
       where: { id },
       include: {
-        sender: {
-          select: {
-            id: true,
-            username: true, // Include the sender's username
+        messages: {
+          orderBy: {
+            createdAt: "asc", // Order messages by creation time (ascending)
+          },
+          include: {
+            sender: {
+              select: {
+                id: true,
+                username: true, // Include the sender's username
+              },
+            },
           },
         },
       },
     });
-    res.status(200).json(message);
+  if(!conversation){
+    return res.status(404).json({ message: "Conversation not found" });
+  }
+  const receiverId = conversation.participantIds.find(
+    (participant) => participant !==conversation.messages[0].senderId
+  )
+  const receiver = await prisma.user.findUnique({
+    where: { id: receiverId },
+    select: {
+      id: true,
+      username: true,
+    }
+  })
+  const formatedConversation={
+    conversationId: conversation.id,
+    messages: conversation.messages,
+    receiver,
+    sender: {
+      id: conversation.messages[0]?.sender.id,
+      username: conversation.messages[0]?.sender.username,
+    },
+    createdAt: conversation.messages[0]?.createdAt
+  }
+    res.status(200).json({ success: true, conversation: formatedConversation });
   } catch (error) {
     console.error("Error in getMessageFromId:", error);
     res.status(500).json({ message: "Internal server error" });

@@ -2,16 +2,21 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
 import App from "./App.tsx";
-// Commented out the socket context and auth context as the frontend is not yet wired up to the backend
 import { AuthContextProvider } from "./context/AuthContext.tsx";
 import SocketContextProvider from "./context/SocketContext.tsx";
+import { BrowserRouter } from "react-router-dom";
+import { ThemeProvider } from "./components/ui/theme-provider.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <AuthContextProvider>
-    <SocketContextProvider>
-      <App />
-    </SocketContextProvider>
-    </AuthContextProvider>
+    <BrowserRouter>
+      <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+        <AuthContextProvider>
+          <SocketContextProvider>
+            <App />
+          </SocketContextProvider>
+        </AuthContextProvider>
+      </ThemeProvider>
+    </BrowserRouter>
   </StrictMode>
 );

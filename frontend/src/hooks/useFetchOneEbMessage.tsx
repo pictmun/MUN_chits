@@ -9,10 +9,8 @@ export const useFetchOneEbMessage = () => {
         setLoading(true);
         try {
             const res=await axiosInstance.get(`/admin/get-message/${id}`);
-            // console.log(res);
-            setMessage(res.data);
+            setMessage(res.data.conversation);
             setLoading(false);
-            
         } catch (error) {
             console.log(error);
             setLoading(false);

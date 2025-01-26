@@ -3,7 +3,6 @@ import pkg from "@prisma/client";
 import { getReceiverSocketId, io } from "../socket/socket.js";
 const { MessageStatus } = pkg;
 
-
 export const sendMessage = async (req, res) => {
   try {
     const { message, isViaEB } = req.body;
@@ -24,9 +23,6 @@ export const sendMessage = async (req, res) => {
     // Validate sender
     const sender = await prisma.user.findUnique({ where: { id: senderId } });
     if (!sender) return res.status(404).json({ message: "Sender not found" });
-
-    // Determine EB users if message is via EB
-    // Determine EB users if message is via EB
     let EBs = [];
     if (isViaEB) {
       EBs = await prisma.user.findMany({
@@ -42,7 +38,10 @@ export const sendMessage = async (req, res) => {
 
     // Create or fetch conversation
     const conversation = await prisma.conversation.create({
-      data: { participantIds: [senderId, receiverId] },
+      data: {
+        participantIds: [senderId, receiverId],
+        participants: { connect: [{ id: senderId }, { id: receiverId }] },
+      },
     });
 
     // Update conversation ID for both users
@@ -69,21 +68,34 @@ export const sendMessage = async (req, res) => {
         },
       },
     });
-
+    await prisma.conversation.update({
+      where: { id: newMessage.conversationId },
+      data: {
+        messages: {
+          connect: {
+            id: newMessage.id,
+          },
+        },
+      },
+    });
     // Prepare the socket payload
     const socketPayload = {
-      id: newMessage.id,
-      body: newMessage.body,
-      senderId: newMessage.senderId,
-      conversationId: newMessage.conversationId,
-      isViaEB: newMessage.isViaEB,
-      status: newMessage.status,
-      createdAt: newMessage.createdAt,
-      sender: {
-        id: newMessage.sender.id,
-        username: newMessage.sender.username,
-      },
+      id: conversation.id,
+      messages: [
+        {
+          id: newMessage.id,
+          body: newMessage.body,
+          createdAt: newMessage.createdAt,
+          sender: {
+            id: newMessage.sender.id,
+            username: newMessage.sender.username,
+          },
+          isViaEB: newMessage.isViaEB,
+          score: newMessage.score,
+        },
+      ],
     };
+    console.log("Emitting 'newMessage':",socketPayload);
 
     // Emit the message to all EBs if isViaEB
     if (isViaEB) {
@@ -94,16 +106,16 @@ export const sendMessage = async (req, res) => {
           io.to(socketId).emit("newMessage", JSON.stringify(socketPayload));
         }
       });
+    } else {
+      const receiverSocketId = getReceiverSocketId(receiverId);
+
+      if (receiverSocketId) {
+        io.to(receiverSocketId).emit(
+          "newMessage",
+          JSON.stringify(socketPayload)
+        );
+      }
     }
-
-else{
-  const receiverSocketId = getReceiverSocketId(receiverId);
-  
-  if (receiverSocketId) {
-    io.to(receiverSocketId).emit("newMessage", JSON.stringify(socketPayload));
-  }
-
-}
     // Emit the message to the receiver
 
     res.status(201).json({
@@ -116,7 +128,6 @@ else{
     res.status(500).json({ message: "Internal server error" });
   }
 };
-
 
 export const getMessages = async (req, res) => {
   try {
@@ -185,11 +196,14 @@ export const replyMessage = async (req, res) => {
   const senderId = req.user.id;
 
   try {
+    // Fetch the conversation and its participants
     const conversation = await prisma.conversation.findUnique({
       where: { id: conversationId },
-      include: { messages: true },
+      include: {
+        participants: true,
+        messages: true, // Include existing messages for context
+      },
     });
-
     if (!conversation)
       return res.status(404).json({ message: "Conversation not found" });
 
@@ -197,20 +211,19 @@ export const replyMessage = async (req, res) => {
     const receiverId = conversation.participantIds.find(
       (id) => id !== senderId
     );
-    console.log(conversation.participantIds, senderId, receiverId);
-
-    // Ensure receiver exists
     const receiver = await prisma.user.findUnique({
       where: { id: receiverId },
     });
-    if (!receiver)
-      return res.status(404).json({ message: "Receiver not found" });
 
-    // Fetch EB for the committee if the message is via EB
+    if (!receiver) {
+      return res.status(404).json({ message: "Receiver not found" });
+    }
+
+    // Fetch EB if the message is via EB
     let EB = null;
     if (isViaEB) {
       EB = await prisma.user.findFirst({
-        where: { role: "EB", committee: receiver.committee },
+        where: { role: "EB", committee: req.user.committee },
       });
       if (!EB)
         return res
@@ -218,7 +231,7 @@ export const replyMessage = async (req, res) => {
           .json({ message: "No EB found for this committee" });
     }
 
-    // Create the new message
+    // Create the reply message
     const newMessage = await prisma.message.create({
       data: {
         body: message,
@@ -227,16 +240,76 @@ export const replyMessage = async (req, res) => {
         isViaEB,
         status: isViaEB ? MessageStatus.PENDING : MessageStatus.APPROVED,
       },
+      include: {
+        sender: {
+          select: {
+            id: true,
+            username: true,
+          },
+        },
+      },
     });
 
-    // Emit to the appropriate socket (EB or receiver)
-    const receiverSocketId = getReceiverSocketId(isViaEB ? EB.id : receiverId);
-    if (receiverSocketId)
-      io.to(receiverSocketId).emit("newMessage", newMessage);
+    // Update the conversation with the new message
+    await prisma.conversation.update({
+      where: { id: conversationId },
+      data: {
+        messages: {
+          connect: {
+            id: newMessage.id,
+          },
+        },
+      },
+    });
 
+    // Format the response payload
+    const formattedMessage = {
+      conversationId,
+      participants: {
+        sender: {
+          id: senderId,
+          username: req.user.username,
+        },
+        receiver: {
+          id: receiverId,
+          username: receiver.username,
+        },
+      },
+      messages: [
+        {
+          body: newMessage.body,
+          createdAt: newMessage.createdAt,
+          sender: {
+            id: newMessage.sender.id,
+            username: newMessage.sender.username,
+          },
+          isViaEB: newMessage.isViaEB,
+          score: newMessage.score,
+          status: newMessage.status,
+          conversationId: conversationId,
+          createdAt: newMessage.createdAt,
+          updatedAt: newMessage.updatedAt,
+          id: newMessage.id,
+        },
+      ],
+    };
+
+    // Emit the message to the appropriate socket (EB or receiver)
+    const receiverSocketId = getReceiverSocketId(isViaEB ? EB.id : receiverId);
+    const senderSocketId = getReceiverSocketId(senderId);
+    // Send real-time socket event for the reply
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit("reply", JSON.stringify(formattedMessage));
+    }
+    if (senderSocketId) {
+      io.to(senderSocketId).emit("reply", JSON.stringify(formattedMessage));
+    }
+
+    // Send the response
     res.status(201).json({
       message: "Message sent successfully",
-      data: newMessage,
+      data: formattedMessage,
+      success: true,
     });
   } catch (error) {
     console.error("Error in replying to messages:", error);
@@ -256,6 +329,12 @@ export const getReceivedMessages = async (req, res) => {
         },
       },
       include: {
+        participants: {
+          select: {
+            id: true,
+            username: true, // Include participant details
+          },
+        },
         messages: {
           where: {
             NOT: {
@@ -264,7 +343,7 @@ export const getReceivedMessages = async (req, res) => {
             status: "APPROVED", // Only include approved messages
           },
           orderBy: {
-            createdAt: "desc", // Order messages by latest first
+            createdAt: "asc", // Order messages by latest first
           },
           include: {
             sender: {
@@ -278,39 +357,139 @@ export const getReceivedMessages = async (req, res) => {
       },
     });
 
-    // Flatten messages across all conversations
-    const receivedMessages = conversations.flatMap((conversation) =>
-      conversation.messages.map((message) => ({
-        ...message,
-        conversationId: conversation.id,
-      }))
-    );
-
-    res.status(200).json({ messages: receivedMessages, success: true });
+    // Format the conversations for frontend
+    const formattedConversations = conversations.map((conversation) => ({
+      id: conversation.id,
+      participants: conversation.participants.map((participant) => ({
+        id: participant.id,
+        username: participant.username,
+      })),
+      messages: conversation.messages.map((message) => ({
+        id: message.id,
+        body: message.body,
+        createdAt: message.createdAt,
+        sender: {
+          id: message.sender.id,
+          username: message.sender.username,
+        },
+        isViaEB: message.isViaEB,
+        score: message.score,
+      })),
+    }));
+    res
+      .status(200)
+      .json({ conversations: formattedConversations, success: true });
   } catch (error) {
-    console.error("Error fetching received messages:", error);
+    console.error("Error fetching conversations:", error);
     res.status(500).json({ message: "Internal server error", error: true });
   }
 };
 
-export const getMessageFromId = async (req, res) => {
+export const getConversationFromId = async (req, res) => {
   try {
     const { id } = req.params;
-    const message = await prisma.message.findUnique({
+    const conversation = await prisma.conversation.findUnique({
       where: { id },
       include: {
-        sender: {
-          select: {
-            id: true,
-            username: true, // Include the sender's username
+        messages: {
+          orderBy: {
+            createdAt: "asc", // Order messages by creation time (ascending)
+          },
+          include: {
+            sender: {
+              select: {
+                id: true,
+                username: true, // Include the sender's username
+              },
+            },
           },
         },
-        
       },
     });
-    res.status(200).json({ message, success: true });
+
+    if (!conversation) {
+      return res
+        .status(404)
+        .json({ message: "Conversation not found", success: false });
+    }
+
+    // Process messages to include a flag for replies
+    const processedMessages = conversation.messages.map((msg) => ({
+      ...msg,
+      isReply: msg.senderId !== req.user.id, // Flag to indicate if it's a reply
+    }));
+
+    res.status(200).json({ messages: processedMessages, success: true });
   } catch (error) {
     console.error("Error fetching conversation:", error);
     res.status(500).json({ message: "Internal server error", error: true });
   }
-}
+};
+
+export const getSentConversations = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    // Fetch all conversations where the user is a participant
+    const conversations = await prisma.conversation.findMany({
+      where: {
+        participantIds: {
+          has: userId, // Check if the user is a participant
+        },
+      },
+      include: {
+        participants: {
+          select: {
+            id: true,
+            username: true, // Include participant details
+          },
+        },
+        messages: {
+          where: {
+            senderId: userId, // Only include messages sent by the user
+          },
+          orderBy: {
+            createdAt: "asc", // Order messages by latest first
+          },
+          include: {
+            sender: {
+              select: {
+                id: true,
+                username: true, // Include the sender's username
+              },
+            },
+          },
+        },
+      },
+    });
+    const filteredConversations = conversations.filter((conversation) => {
+      return conversation.messages.length > 0;
+    });
+    // Format the conversations for frontend
+    const formattedConversations = filteredConversations.map(
+      (conversation) => ({
+        id: conversation.id,
+        participants: conversation.participants.map((participant) => ({
+          id: participant.id,
+          username: participant.username,
+        })),
+        messages: conversation.messages.map((message) => ({
+          id: message.id,
+          body: message.body,
+          createdAt: message.createdAt,
+          sender: {
+            id: message.sender.id,
+            username: message.sender.username,
+          },
+          status: message.status,
+        })),
+      })
+    );
+    res
+      .status(200)
+      .json({ success: true, conversations: formattedConversations });
+  } catch (error) {
+    console.error("Error in getSentConversations:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
