@@ -33,6 +33,7 @@ export const UpdateMessageStatusDrawer = ({ message}: any) => {
     const value = parseInt(event.target.value, 10);
 
     setScore(value);
+
   };
   const handleScoreSubmit = async () => {
     if (typeof score === "number") {
@@ -41,6 +42,7 @@ export const UpdateMessageStatusDrawer = ({ message}: any) => {
         await updateMessageScore(message?.id, score, status);
         // No need to reload the page or navigate away
         setIsOpen(false);
+        window.location.reload();
       } catch (error) {
         console.error("Failed to update message:", error);
         toast.error("Failed to update message status");

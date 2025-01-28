@@ -79,7 +79,7 @@ export const sendMessage = async (req, res) => {
       },
     });
     // Prepare the socket payload
-    const socketPayload = {
+    const socketPayloadDelegate = {
       id: conversation.id,
       messages: [
         {
@@ -95,24 +95,49 @@ export const sendMessage = async (req, res) => {
         },
       ],
     };
+    const socketPayloadEB={
+      conversationId:conversation.id,
+      messages: [
+        {
+          id: newMessage.id,
+          body: newMessage.body,
+          createdAt: newMessage.createdAt,
+          sender: {
+            id: newMessage.sender.id,
+            username: newMessage.sender.username,
+          },
+          senderId: newMessage.senderId,
+          isViaEB: newMessage.isViaEB,
+          score: newMessage.score,
+          updatedAt: newMessage.updatedAt,
+          status: newMessage.status
+        },
+      ],
+      sender:{
+        id:sender.id,
+        username:sender.username
+      },
+      receiver:{
+        id:receiver.id,
+        username:receiver.username,
+        portfolio:receiver.portfolio
+      }
+    }
 
     // Emit the message to all EBs if isViaEB
     if (isViaEB) {
       const EBSocketIds = EBs.map((eb) => getReceiverSocketId(eb.id)); // Map only if EBs is an array
-      console.log("EBSocketIds", EBSocketIds);
       EBSocketIds.forEach((socketId) => {
         if (socketId) {
-        
-          io.to(socketId).emit("newMessage", JSON.stringify(socketPayload));
+          io.to(socketId).emit("newMessage", JSON.stringify(socketPayloadEB));
         }
       });
     } else {
       const receiverSocketId = getReceiverSocketId(receiverId);
-
       if (receiverSocketId) {
         io.to(receiverSocketId).emit(
           "newMessage",
-          JSON.stringify(socketPayload)
+          JSON.stringify(socketPayloadDelegate)
         );
       }
     }
@@ -120,7 +145,7 @@ export const sendMessage = async (req, res) => {
 
     res.status(201).json({
       message: "Message sent successfully",
-      data: socketPayload,
+      data: isViaEB ? socketPayloadDelegate : socketPayloadEB,
       success: true,
     });
   } catch (error) {
@@ -231,7 +256,6 @@ export const replyMessage = async (req, res) => {
           .json({ message: "No EB found for this committee" });
     }
 
-    console.log("EB", EB);
     // Create the reply message
     const newMessage = await prisma.message.create({
       data: {
@@ -250,6 +274,7 @@ export const replyMessage = async (req, res) => {
         },
       },
     });
+    
 
     // Update the conversation with the new message
     await prisma.conversation.update({
@@ -285,11 +310,9 @@ export const replyMessage = async (req, res) => {
     const senderSocketId = getReceiverSocketId(senderId);
     // Send real-time socket event for the reply
     if (receiverSocketId) {
-      console.log("Emitting reply to socket:", receiverSocketId);
       io.to(receiverSocketId).emit("reply", JSON.stringify(messagePayload));
     }
     if (senderSocketId) {
-      console.log("Emitting reply to socket:", senderSocketId);
       io.to(senderSocketId).emit("reply", JSON.stringify(messagePayload));
     }
 

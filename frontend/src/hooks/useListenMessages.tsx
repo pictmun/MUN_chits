@@ -4,7 +4,7 @@ import { useConversation } from "../zustand/useConversation";
 
 const useListenMessages = () => {
   const { socket } = useSocketContext();
-  const { setConversations } = useConversation();
+  const { setConversations, conversations } = useConversation();
 
   useEffect(() => {
     if (!socket) return;
@@ -13,7 +13,6 @@ const useListenMessages = () => {
     const handleNewMessage = (message: string) => {
       try {
         const parsedMessage = JSON.parse(message);
-        console.log("Received new message:", parsedMessage);  
         setConversations((prevConversations: any[]) => {
           // Check if conversation already exists
           const existingConvIndex = prevConversations.findIndex(
@@ -45,8 +44,6 @@ const useListenMessages = () => {
     const handleReply = (message: string) => {
       try {
         const parsedMessage = JSON.parse(message);
-        console.log("Received reply message:", parsedMessage); // Debug log
-
         const newMessage = {
           id: parsedMessage.id,
           body: parsedMessage.body,
@@ -62,43 +59,54 @@ const useListenMessages = () => {
             username: parsedMessage.sender.username,
           },
         };
-
-        setConversations((prevConversations: any[]) =>
-          prevConversations.map((conversation) =>
-            conversation.id === parsedMessage.conversationId
-              ? {
-                  ...conversation,
-                  messages: [...conversation.messages, newMessage],
-                }
-              : conversation
-          )
-        );
+        // Immutable state update
+        if(parsedMessage.isViaEB){
+          setConversations((prevConversations: any[]) =>
+            prevConversations.map((conversation) =>
+              conversation.conversationId === parsedMessage.conversationId
+                ? {
+                    ...conversation,
+                    messages: [...conversation.messages, newMessage], // Create a new array with the new message
+                  }
+                : conversation
+            )
+          );
+        }else{
+          setConversations((prevConversations: any[]) =>
+            prevConversations.map((conversation) =>
+              conversation.id === parsedMessage.conversationId
+                ? {
+                    ...conversation,
+                    messages: [...conversation.messages, newMessage], // Create a new array with the new message
+                  }
+                : conversation
+            )
+          );
+        }
       } catch (error) {
         console.error("Error parsing reply:", error);
       }
     };
+
     // 3. Status Update Handler
     const handleStatusUpdate = (message: string) => {
       try {
         const parsedMessage = JSON.parse(message);
-        setConversations((prevConversations: any[]) =>
-          prevConversations.map((conversation) =>
-            conversation.id === parsedMessage.conversationId
-              ? {
-                  ...conversation,
-                  messages: conversation.messages.map((msg: any) =>
-                    msg.id === parsedMessage.id
-                      ? {
-                          ...msg,
-                          status: parsedMessage.status,
-                          score: parsedMessage.score,
-                        }
-                      : msg
-                  ),
-                }
-              : conversation
-          )
-        );
+        const findConv = conversations.find((conv: any) => conv.id === parsedMessage.conversationId);
+        if(!findConv){
+          setConversations((prevConversations: any[]) =>[...prevConversations, parsedMessage]);
+        }else{
+          setConversations((prevConversations: any[]) =>
+            prevConversations.map((conversation) =>
+              conversation.id === parsedMessage.conversationId
+                ? {
+                    ...conversation,
+                    messages: [...conversation.messages, parsedMessage],
+                  }
+                : conversation
+            )
+          );
+        }
       } catch (error) {
         console.error("Error parsing status update:", error);
       }
@@ -115,7 +123,7 @@ const useListenMessages = () => {
       socket.off("reply", handleReply);
       socket.off("messageStatusUpdated", handleStatusUpdate);
     };
-  }, [socket, setConversations]);
+  }, [socket, setConversations, conversations]);
 
   return null;
 };

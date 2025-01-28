@@ -5,13 +5,13 @@ import { useGetChit } from "../../hooks/useGetChit";
 import { Loading } from "../../components/Loading";
 import { NoMessage } from "../../components/NoMessage";
 import { useSocketContext } from "../../context/SocketContext";
+import { useConversation } from "../../zustand/useConversation";
 
 const ChitModalWrapper: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { loading, chit, updateChit } = useGetChit(id!);
   const { socket } = useSocketContext();
-
-  // ... existing code ...
+const { addMessageToConversation } = useConversation();
 
 useEffect(() => {
   if (!socket || !id || !chit?.messages?.[0]?.conversationId) return;
@@ -21,7 +21,6 @@ useEffect(() => {
   const handleReply = (message: string) => {
     try {
       const parsedMessage = JSON.parse(message);
-      console.log("Received message in modal:", parsedMessage);
 
       if (parsedMessage.conversationId === conversationId) {
         // Check if message already exists
@@ -31,7 +30,9 @@ useEffect(() => {
 
         if (messageExists) return;
 
-        chit.messages.push(parsedMessage); // Just push is enough!
+        chit.messages.push(parsedMessage); 
+        addMessageToConversation(parsedMessage.conversationId, parsedMessage);
+        // Just push is enough!
       }
     } catch (error) {
       console.error("Error parsing reply in modal:", error);

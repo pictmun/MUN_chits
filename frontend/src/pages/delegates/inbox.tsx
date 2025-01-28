@@ -63,7 +63,6 @@ const Inbox = () => {
   if (loading) {
     return <Loading classes="w-full h-full" />;
   }
-
   return (
     <div className="p-5 w-full">
       <div className="mb-5 flex flex-col items-start justify-center gap-2">
@@ -76,9 +75,9 @@ const Inbox = () => {
       </div>
       {sortedConversations?.length === 0 && <NoMessage />}
 
-      <ul className="border rounded-lg mx-auto w-[90%] md:w-full divide-y divide-y-muted-foreground max-w-4xl">
-        {paginatedConversations.map((conversation) => (
-          <ListItem key={conversation.id} conversation={conversation} />
+      <ul className="border rounded-lg mx-auto w-[90%] md:w-full divide-y divide-y-muted-foreground max-w-5xl">
+        {paginatedConversations.map((conversation,index:number) => (
+          <ListItem key={index} conversation={conversation} />
         ))}
       </ul>
 

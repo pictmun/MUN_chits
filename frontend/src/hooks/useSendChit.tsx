@@ -9,7 +9,6 @@ export const useSendChit = () => {
   const sendChit = async (message: string,isViaEb: boolean, recipient: string) => {
     setIsLoading(true);
     try {
-      console.log( isViaEb);
       const res = await axiosInstance.post(`/message/send/${recipient}`, {
         message,
         isViaEB:isViaEb

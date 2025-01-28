@@ -93,22 +93,29 @@ export const updateMessageStatus = async (req, res) => {
     if (!findConversation) {
       return res.status(404).json({ message: "Conversation not found" });
     }
-
+    let socketPayload = {};
+    if (findConversation.messages.length == 1) {
+      socketPayload = {
+        id: findConversation.id,
+        messages: findConversation.messages,
+        participants: findConversation.participants,
+      };
+    } else {
+      socketPayload = {
+        id: updatedMessage.id,
+        status: updatedMessage.status,
+        score: updatedMessage.score,
+        conversationId: updatedMessage.conversationId,
+        body: updatedMessage.body,
+        createdAt: updatedMessage.createdAt,
+        sender: {
+          id: updatedMessage.sender.id,
+          username: updatedMessage.sender.username,
+        },
+        isViaEB: updatedMessage.isViaEB,
+      };
+    }
     // Build the payload for socket events
-    const socketPayload = {
-      id: updatedMessage.id,
-      status: updatedMessage.status,
-      score: updatedMessage.score,
-      conversationId: updatedMessage.conversationId,
-      body: updatedMessage.body,
-      createdAt: updatedMessage.createdAt,
-      sender: {
-        id: updatedMessage.sender.id,
-        username: updatedMessage.sender.username,
-      },
-      isViaEB: updatedMessage.isViaEB,
-    };
-
     // Emit to all relevant parties
     const receiverId = findConversation.participantIds.find(
       (id) => id !== updatedMessage.senderId
@@ -124,13 +131,13 @@ export const updateMessageStatus = async (req, res) => {
     }
 
     // Emit to sender
-    const senderSocketId = getReceiverSocketId(updatedMessage.senderId);
-    if (senderSocketId) {
-      io.to(senderSocketId).emit(
-        "messageStatusUpdated",
-        JSON.stringify(socketPayload)
-      );
-    }
+    // const senderSocketId = getReceiverSocketId(updatedMessage.senderId);
+    // if (senderSocketId) {
+    //   io.to(senderSocketId).emit(
+    //     "messageStatusUpdated",
+    //     JSON.stringify(socketPayload)
+    //   );
+    // }
 
     // If message is approved, also emit to EB users
     if (status === "APPROVED") {
@@ -243,9 +250,7 @@ export const getAllMessages = async (req, res) => {
     // Filter out null results
     const validConversations = formattedConversations.filter(Boolean);
 
-    res
-      .status(200)
-      .json({ success: true, conversations: validConversations });
+    res.status(200).json({ success: true, conversations: validConversations });
   } catch (error) {
     console.error("Error in getAllMessages:", error);
     res.status(500).json({ message: "Internal server error" });

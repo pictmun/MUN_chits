@@ -71,6 +71,25 @@ export const Sidebar = () => {
               </Link>
             </li>
           ))}
+
+          {
+              authUser?.role=="ADMIN"&& (
+                <li
+                  className={`${
+                    url === "/create-user" ? "bg-muted font-semibold" : ""
+                  } text-lg  text-primary p-3 rounded-lg w-full`}
+                >
+                  <Link
+                    to="/create-user"
+                    className="flex items-center justify-start gap-2"
+                  >
+                    <Plus className="size-5" />
+                    Create User
+                  </Link>
+                </li>
+        
+              )
+            }
       </ul>
       <div className="mt-auto flex flex-col gap-3">
         <div className="flex items-center justify-start w-full bg-muted py-1 px-2 rounded-full gap-2">

@@ -34,7 +34,7 @@ const ChitModal = ({
         <div className="flex justify-between items-center mb-8">
           <h2 className="text-2xl font-semibold">Chit</h2>
           <div className="flex items-center gap-4">
-            {messages[0].isViaEB && (
+            {messages[0]?.isViaEB && (
               <div className="py-2 px-2.5 rounded-full bg-slate-200 dark:bg-slate-800">
                 Via EB
               </div>
