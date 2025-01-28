@@ -7,8 +7,8 @@ interface ISocketContext {
   onlineUsers: string[];
 }
 const SocketContext = createContext<ISocketContext | undefined>(undefined);
-const socketUrl ="http://localhost:5000"//dev
-// const socketUrl="/"
+// const socketUrl ="http://localhost:5000"//dev
+const socketUrl="/"
 
 const SocketContextProvider = ({ children }: { children: React.ReactNode }) => {
   const socketRef = useRef<Socket | null>(null);
