@@ -13,6 +13,7 @@ const useListenMessages = () => {
     const handleNewMessage = (message: string) => {
       try {
         const parsedMessage = JSON.parse(message);
+        console.log("Received new message:", parsedMessage);  
         setConversations((prevConversations: any[]) => {
           // Check if conversation already exists
           const existingConvIndex = prevConversations.findIndex(
@@ -41,31 +42,37 @@ const useListenMessages = () => {
     };
 
     // 2. Reply Handler
-    // 2. Reply Handler
-    // 2. Reply Handler
     const handleReply = (message: string) => {
       try {
         const parsedMessage = JSON.parse(message);
-        console.log("Received reply message:", parsedMessage);
+        console.log("Received reply message:", parsedMessage); // Debug log
 
-        setConversations((prevConversations:any) => {
-          const conversation = prevConversations.find(
-            (conv:any) => conv.id === parsedMessage.conversationId
-          );
+        const newMessage = {
+          id: parsedMessage.id,
+          body: parsedMessage.body,
+          createdAt: parsedMessage.createdAt,
+          updatedAt: parsedMessage.updatedAt,
+          senderId: parsedMessage.senderId,
+          conversationId: parsedMessage.conversationId,
+          isViaEB: parsedMessage.isViaEB,
+          status: parsedMessage.status,
+          score: parsedMessage.score,
+          sender: {
+            id: parsedMessage.sender.id,
+            username: parsedMessage.sender.username,
+          },
+        };
 
-          if (conversation) {
-            // Check if message already exists
-            const messageExists = conversation.messages.some(
-              (msg:any) => msg.id === parsedMessage.id
-            );
-
-            if (!messageExists) {
-              conversation.messages.push(parsedMessage);
-            }
-          }
-
-          return prevConversations;
-        });
+        setConversations((prevConversations: any[]) =>
+          prevConversations.map((conversation) =>
+            conversation.id === parsedMessage.conversationId
+              ? {
+                  ...conversation,
+                  messages: [...conversation.messages, newMessage],
+                }
+              : conversation
+          )
+        );
       } catch (error) {
         console.error("Error parsing reply:", error);
       }
