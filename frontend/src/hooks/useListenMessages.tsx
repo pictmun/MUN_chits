@@ -48,15 +48,15 @@ const useListenMessages = () => {
         const parsedMessage = JSON.parse(message);
         console.log("Received reply message:", parsedMessage);
 
-        setConversations((prevConversations) => {
+        setConversations((prevConversations:any) => {
           const conversation = prevConversations.find(
-            (conv) => conv.id === parsedMessage.conversationId
+            (conv:any) => conv.id === parsedMessage.conversationId
           );
 
           if (conversation) {
             // Check if message already exists
             const messageExists = conversation.messages.some(
-              (msg) => msg.id === parsedMessage.id
+              (msg:any) => msg.id === parsedMessage.id
             );
 
             if (!messageExists) {

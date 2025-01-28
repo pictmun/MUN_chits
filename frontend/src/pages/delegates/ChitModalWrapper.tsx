@@ -5,7 +5,6 @@ import { useGetChit } from "../../hooks/useGetChit";
 import { Loading } from "../../components/Loading";
 import { NoMessage } from "../../components/NoMessage";
 import { useSocketContext } from "../../context/SocketContext";
-import { Message } from "../../types/global";
 
 const ChitModalWrapper: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -27,7 +26,7 @@ useEffect(() => {
       if (parsedMessage.conversationId === conversationId) {
         // Check if message already exists
         const messageExists = chit.messages.some(
-          (msg:Message) => msg.id === parsedMessage.id
+          (msg:any) => msg.id === parsedMessage.id
         );
 
         if (messageExists) return;

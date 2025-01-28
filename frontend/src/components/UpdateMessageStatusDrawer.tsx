@@ -20,11 +20,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
-import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
-export const UpdateMessageStatusDrawer = ({ message,conversationId }: any) => {
-  const navigate = useNavigate();
+export const UpdateMessageStatusDrawer = ({ message}: any) => {
   const [isOpen,setIsOpen]=useState(false)
 
   const { updateMessageScore, loading: scoreLoading } = useMessageScoreUpdate();
@@ -39,6 +37,7 @@ export const UpdateMessageStatusDrawer = ({ message,conversationId }: any) => {
   const handleScoreSubmit = async () => {
     if (typeof score === "number") {
       try {
+        if(status=='PENDING')return;
         await updateMessageScore(message?.id, score, status);
         // No need to reload the page or navigate away
         setIsOpen(false);
@@ -50,9 +49,7 @@ export const UpdateMessageStatusDrawer = ({ message,conversationId }: any) => {
   };
 
   // Remove the window.location.reload() and navigation
-  const handleClose = () => {
-    setIsOpen(false);
-  };
+
   useEffect(() => {
     if (message) {
       setScore(message.score || "");
