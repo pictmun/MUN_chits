@@ -1,31 +1,36 @@
 import { create } from "zustand";
-import { axiosInstance } from "../lib/axiosInstance";
 
-export const useConversation = create<any>((set) => ({
-  conversations: [], // Default to an empty array
-  setConversations: (updateFn: any) =>
-    set((state:any) => ({
-      conversations:
-        typeof updateFn === "function"
-          ? updateFn(state.conversations)
-          : updateFn,
+type Message = {
+  id: string;
+  body: string;
+  createdAt: string;
+  updatedAt: string;
+  senderId: string;
+  conversationId: string;
+  isReply: boolean;
+  isViaEB: boolean;
+  status: string;
+  score: number;
+  sender: {
+    id: string;
+    username: string;
+  };
+};
+
+type Conversation = {
+  id: string;
+  messages: Message[];
+};
+
+type ConversationStore = {
+  conversations: Conversation[];
+  setConversations: (conversations: Conversation[] | ((prev: Conversation[]) => Conversation[])) => void;
+};
+
+export const useConversation = create<ConversationStore>((set) => ({
+  conversations: [],
+  setConversations: (conversations) =>
+    set((state) => ({
+      conversations: typeof conversations === "function" ? conversations(state.conversations) : conversations,
     })),
-  messages: [],
-  setMessages: (messages: any) => set({ messages }),
-  fetchConversations: async () => {
-    try {
-      set({ loading: true, error: null });
-      const response = await axiosInstance.get("/message/get");
-      if (!response.data.success) {
-        throw new Error(
-          response.data.message || "Failed to fetch conversations"
-        );
-      }
-      set({ conversations: response.data.conversations });
-    } catch (error: any) {
-      set({ error: error.message });
-    } finally {
-      set({ loading: false });
-    }
-  },
 }));

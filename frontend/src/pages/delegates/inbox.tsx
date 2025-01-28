@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useGetConversation } from "../../hooks/useGetConversation";
 import useListenMessages from "../../hooks/useListenMessages";
@@ -17,10 +17,7 @@ const Inbox = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const { authUser } = useAuthContext();
 
-  if (authUser) {
-    useListenMessages();
-  }
-
+  
   const sortedConversations = useMemo(() => {
     if (!Array.isArray(conversations)) return [];
     return conversations
@@ -60,6 +57,9 @@ const Inbox = () => {
     );
   }, [sortedConversations, currentPage]);
 
+ if(authUser) {
+   useListenMessages();
+ }
   if (loading) {
     return <Loading classes="w-full h-full" />;
   }

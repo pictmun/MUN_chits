@@ -95,14 +95,14 @@ export const sendMessage = async (req, res) => {
         },
       ],
     };
-    console.log("Emitting 'newMessage':",socketPayload);
 
     // Emit the message to all EBs if isViaEB
     if (isViaEB) {
       const EBSocketIds = EBs.map((eb) => getReceiverSocketId(eb.id)); // Map only if EBs is an array
-
+      console.log("EBSocketIds", EBSocketIds);
       EBSocketIds.forEach((socketId) => {
         if (socketId) {
+        
           io.to(socketId).emit("newMessage", JSON.stringify(socketPayload));
         }
       });
@@ -191,7 +191,7 @@ export const getUserForSidebar = async (req, res) => {
 };
 
 export const replyMessage = async (req, res) => {
-  const { message, isViaEB } = req.body;
+  const { message } = req.body;
   const { id: conversationId } = req.params;
   const senderId = req.user.id;
 
@@ -221,7 +221,7 @@ export const replyMessage = async (req, res) => {
 
     // Fetch EB if the message is via EB
     let EB = null;
-    if (isViaEB) {
+    if (conversation.messages[0].isViaEB) {
       EB = await prisma.user.findFirst({
         where: { role: "EB", committee: req.user.committee },
       });
@@ -231,14 +231,15 @@ export const replyMessage = async (req, res) => {
           .json({ message: "No EB found for this committee" });
     }
 
+    console.log("EB", EB);
     // Create the reply message
     const newMessage = await prisma.message.create({
       data: {
         body: message,
         senderId,
         conversationId,
-        isViaEB,
-        status: isViaEB ? MessageStatus.PENDING : MessageStatus.APPROVED,
+        isViaEB:conversation.messages[0].isViaEB,
+        status: conversation.messages[0].isViaEB ? MessageStatus.PENDING : MessageStatus.APPROVED,
       },
       include: {
         sender: {
@@ -263,52 +264,39 @@ export const replyMessage = async (req, res) => {
     });
 
     // Format the response payload
-    const formattedMessage = {
-      conversationId,
-      participants: {
-        sender: {
-          id: senderId,
-          username: req.user.username,
-        },
-        receiver: {
-          id: receiverId,
-          username: receiver.username,
-        },
-      },
-      messages: [
-        {
-          body: newMessage.body,
-          createdAt: newMessage.createdAt,
-          sender: {
-            id: newMessage.sender.id,
-            username: newMessage.sender.username,
-          },
-          isViaEB: newMessage.isViaEB,
-          score: newMessage.score,
-          status: newMessage.status,
-          conversationId: conversationId,
-          createdAt: newMessage.createdAt,
-          updatedAt: newMessage.updatedAt,
-          id: newMessage.id,
-        },
-      ],
-    };
-
+ const messagePayload = {
+   id: newMessage.id,
+   body: newMessage.body,
+   createdAt: newMessage.createdAt,
+   updatedAt: newMessage.updatedAt,
+   senderId: senderId,
+   conversationId: conversationId,
+   isViaEB: newMessage.isViaEB,
+   status: newMessage.status,
+   score: newMessage.score || 0,
+   sender: {
+     id: senderId,
+     username: req.user.username,
+   },
+ };
     // Emit the message to the appropriate socket (EB or receiver)
-    const receiverSocketId = getReceiverSocketId(isViaEB ? EB.id : receiverId);
+    const receiverSocketId = getReceiverSocketId(conversation.messages[0].isViaEB ? EB.id : receiverId);
+
     const senderSocketId = getReceiverSocketId(senderId);
     // Send real-time socket event for the reply
     if (receiverSocketId) {
-      io.to(receiverSocketId).emit("reply", JSON.stringify(formattedMessage));
+      console.log("Emitting reply to socket:", receiverSocketId);
+      io.to(receiverSocketId).emit("reply", JSON.stringify(messagePayload));
     }
     if (senderSocketId) {
-      io.to(senderSocketId).emit("reply", JSON.stringify(formattedMessage));
+      console.log("Emitting reply to socket:", senderSocketId);
+      io.to(senderSocketId).emit("reply", JSON.stringify(messagePayload));
     }
 
     // Send the response
     res.status(201).json({
       message: "Message sent successfully",
-      data: formattedMessage,
+      data:messagePayload,
       success: true,
     });
   } catch (error) {
@@ -392,6 +380,9 @@ export const getConversationFromId = async (req, res) => {
       where: { id },
       include: {
         messages: {
+          where: {
+            status: "APPROVED",
+          },
           orderBy: {
             createdAt: "asc", // Order messages by creation time (ascending)
           },

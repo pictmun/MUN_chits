@@ -18,7 +18,6 @@ export const useReplyMessage = () => {
       }
       const res = await axiosInstance.post(`/message/reply/${conversationId}`, {
         message,
-        isViaEb: false,
       });
       if (!res.data.success) {
         throw new Error(res.data.error || "Failed to send chit");
@@ -30,7 +29,7 @@ export const useReplyMessage = () => {
           conversation.id === conversationId
             ? {
                 ...conversation,
-                messages: [...conversation.messages, res.data.data.messages[0]],
+                messages: [...conversation.messages, res.data.data],
               }
             : conversation
         )

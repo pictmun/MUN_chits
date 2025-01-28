@@ -50,8 +50,8 @@ const ChitModal = ({
             </Button>
           </div>
         </div>
-        {messages.map((message: any) => (
-          <div className="flex flex-col justify-start mb-2 pb-2 border-b-2 border-b-muted">
+        {messages.map((message: any,index: number) => (
+          <div key={index} className="flex flex-col justify-start mb-2 pb-2 border-b-2 border-b-muted">
             {/* Message Header -> Sender Details */}
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-3">
