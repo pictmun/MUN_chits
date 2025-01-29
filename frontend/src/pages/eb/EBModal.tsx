@@ -27,7 +27,9 @@ const BoardModal = () => {
     if (!socket || !message?.conversationId) return;
 
     const handleReply = (msg: any) => {
-      setNewMessages(true);
+      if (msg) {
+        setNewMessages(true);
+      }
     };
 
     socket.on("reply", handleReply);
