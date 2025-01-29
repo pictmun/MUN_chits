@@ -95,8 +95,8 @@ export const sendMessage = async (req, res) => {
         },
       ],
     };
-    const socketPayloadEB={
-      conversationId:conversation.id,
+    const socketPayloadEB = {
+      conversationId: conversation.id,
       messages: [
         {
           id: newMessage.id,
@@ -110,19 +110,19 @@ export const sendMessage = async (req, res) => {
           isViaEB: newMessage.isViaEB,
           score: newMessage.score,
           updatedAt: newMessage.updatedAt,
-          status: newMessage.status
+          status: newMessage.status,
         },
       ],
-      sender:{
-        id:sender.id,
-        username:sender.username
+      sender: {
+        id: sender.id,
+        username: sender.username,
       },
-      receiver:{
-        id:receiver.id,
-        username:receiver.username,
-        portfolio:receiver.portfolio
-      }
-    }
+      receiver: {
+        id: receiver.id,
+        username: receiver.username,
+        portfolio: receiver.portfolio,
+      },
+    };
 
     // Emit the message to all EBs if isViaEB
     if (isViaEB) {
@@ -262,8 +262,10 @@ export const replyMessage = async (req, res) => {
         body: message,
         senderId,
         conversationId,
-        isViaEB:conversation.messages[0].isViaEB,
-        status: conversation.messages[0].isViaEB ? MessageStatus.PENDING : MessageStatus.APPROVED,
+        isViaEB: conversation.messages[0].isViaEB,
+        status: conversation.messages[0].isViaEB
+          ? MessageStatus.PENDING
+          : MessageStatus.APPROVED,
       },
       include: {
         sender: {
@@ -274,7 +276,6 @@ export const replyMessage = async (req, res) => {
         },
       },
     });
-    
 
     // Update the conversation with the new message
     await prisma.conversation.update({
@@ -287,25 +288,50 @@ export const replyMessage = async (req, res) => {
         },
       },
     });
-
+    let messagePayload = {};
+    if (conversation.messages[0].isViaEB) {
+      messagePayload = {
+        id: newMessage.id,
+        body: newMessage.body,
+        createdAt: newMessage.createdAt,
+        updatedAt: newMessage.updatedAt,
+        senderId: senderId,
+        conversationId: conversationId,
+        isViaEB: newMessage.isViaEB,
+        status: newMessage.status,
+        score: newMessage.score || 0,
+        sender: {
+          id: senderId,
+          username: req.user.username,
+        },
+        receiver: {
+          id: receiverId,
+          username: receiver.username,
+        },
+      };
+    } else {
+      messagePayload = {
+        id: newMessage.id,
+        body: newMessage.body,
+        createdAt: newMessage.createdAt,
+        updatedAt: newMessage.updatedAt,
+        senderId: senderId,
+        conversationId: conversationId,
+        isViaEB: newMessage.isViaEB,
+        status: newMessage.status,
+        score: newMessage.score || 0,
+        sender: {
+          id: senderId,
+          username: req.user.username,
+        },
+      };
+    }
     // Format the response payload
- const messagePayload = {
-   id: newMessage.id,
-   body: newMessage.body,
-   createdAt: newMessage.createdAt,
-   updatedAt: newMessage.updatedAt,
-   senderId: senderId,
-   conversationId: conversationId,
-   isViaEB: newMessage.isViaEB,
-   status: newMessage.status,
-   score: newMessage.score || 0,
-   sender: {
-     id: senderId,
-     username: req.user.username,
-   },
- };
+
     // Emit the message to the appropriate socket (EB or receiver)
-    const receiverSocketId = getReceiverSocketId(conversation.messages[0].isViaEB ? EB.id : receiverId);
+    const receiverSocketId = getReceiverSocketId(
+      conversation.messages[0].isViaEB ? EB.id : receiverId
+    );
 
     const senderSocketId = getReceiverSocketId(senderId);
     // Send real-time socket event for the reply
@@ -319,7 +345,7 @@ export const replyMessage = async (req, res) => {
     // Send the response
     res.status(201).json({
       message: "Message sent successfully",
-      data:messagePayload,
+      data: messagePayload,
       success: true,
     });
   } catch (error) {

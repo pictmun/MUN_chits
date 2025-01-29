@@ -16,4 +16,15 @@ export const useConversation = create<any>((set) => ({
           : conversation
       ),
     })),
+  addMessagesToEBConversation: (conversationId: string, message:any) =>
+    set((state: any) => ({
+    conversations: state.conversations.map((conversation: any) =>
+      conversation.id === conversationId
+        ? {
+            ...conversation,
+            messages: [...(conversation.messages || []), message], // ✅ Ensuring messages exist
+          }
+        : conversation
+    ),
+})),
 }));

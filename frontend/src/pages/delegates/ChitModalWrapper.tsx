@@ -42,18 +42,8 @@ useEffect(() => {
     try {
       const parsedMessage = JSON.parse(message);
       if (parsedMessage.conversationId === conversationId) {
-        updateChit((prevChit: any) => ({
-          ...prevChit,
-          messages: prevChit.messages.map((msg: any) =>
-            msg.id === parsedMessage.id
-              ? {
-                  ...msg,
-                  status: parsedMessage.status,
-                  score: parsedMessage.score,
-                }
-              : msg
-          ),
-        }));
+        chit.messages.push(parsedMessage);
+        addMessageToConversation(parsedMessage.conversationId, parsedMessage);
       }
     } catch (error) {
       console.error("Error parsing status update in modal:", error);

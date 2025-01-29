@@ -76,17 +76,17 @@ export const UpdateMessageStatusDrawer = ({ message}: any) => {
         <div className="mb-4 p-6 flex flex-col gap-4">
           <div className="flex flex-col gap-3">
             <Label htmlFor="score" className="block text-xl font-semibold">
-              Assign Points/Marks(0-10)
+              Assign Points/Marks
             </Label>
             <Input
               type="number"
               id="score"
               min={0}
-              max={10}
               value={score}
               onChange={handleScoreChange}
               placeholder="Enter score"
-              className="max-w-2xl px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="max-w-2xl px-3 py-2 border rounded-md "
+              required
             />
           </div>
           <div className="flex flex-col gap-3">

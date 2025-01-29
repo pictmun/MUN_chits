@@ -10,34 +10,52 @@ import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { Button } from "../../components/ui/button";
 import { useCreateUser } from "../../hooks/useCreateUser";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../components/ui/select";
+
 export type FormDataType = {
-  username:string,
-  portfolio: string,
-    role: string,
-  committee: string,
-  password:string
-}
+  username: string;
+  portfolio: string;
+  role: string;
+  committee: string;
+  password: string;
+};
+
 const CreateEntries = () => {
-  // Single state object for all form inputs
   const [formData, setFormData] = useState<FormDataType>({
     username: "",
     portfolio: "",
     role: "",
     committee: "",
-    password:""
+    password: "",
   });
-  const {createUser} = useCreateUser()
+  const [role, setRole] = useState("");
+  const [committee, setCommittee] = useState("");
+  const { createUser } = useCreateUser();
   const [loading, setLoading] = useState(false);
-  const handleSubmit=(e:React.FormEvent)=>{
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-   createUser(formData);
-   setLoading(false);
-   setFormData({username:"",portfolio:"",role:"",committee:"",password:""})
-  }
+    createUser({ ...formData, role, committee });
+    setLoading(false);
+    setFormData({
+      username: "",
+      portfolio: "",
+      role: "",
+      committee: "",
+      password: "",
+    });
+    setRole("");
+    setCommittee("");
+  };
 
-  // Handle input changes
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>|React.ChangeEvent<HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prevState) => ({
       ...prevState,
@@ -87,38 +105,40 @@ const CreateEntries = () => {
               />
             </div>
             <div className="mb-4">
-              <Label htmlFor="role">Select Role</Label>
-              <select
-                name="role"
-                id="role"
-                value={formData.role}
-                onChange={handleChange}
-                className="w-full p-2 border rounded-md"
-              >
-                <option value={""}>Select Role</option>
-                <option value="DELEGATE">Delegate</option>
-                <option value="EB">EB</option>
-              </select>
+              <Label>Select Role</Label>
+              <Select value={role} onValueChange={setRole}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ADMIN">Admin</SelectItem>
+                  <SelectItem value="EB">EB</SelectItem>
+                  <SelectItem value="DELEGATE">Delegate</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div className="mb-4">
-              <Label htmlFor="committee">Select Committee</Label>
-              <select
-                name="committee"
-                id="committee"
-                value={formData.committee}
-                onChange={handleChange}
-                className="w-full p-2 border rounded-md"
-              >
-                <option value={""}>Select Committee</option>
-                <option value="UEFA">UEFA</option>
-                <option value="AIPPM">AIPPM</option>
-                <option value="UNHRC">UNHRC</option>
-                <option value="IP">IP</option>
-              </select>
+              <Label>Select Committee</Label>
+              <Select value={committee} onValueChange={setCommittee}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Committee" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="AIPPM">AIPPM</SelectItem>
+                  <SelectItem value="UNHRC">UNHRC</SelectItem>
+                  <SelectItem value="UNSC">UNSC</SelectItem>
+                  <SelectItem value="UNCSW">UNCSW</SelectItem>
+                  <SelectItem value="UNODC">UNODC</SelectItem>
+                  <SelectItem value="IP">IP</SelectItem>
+                  <SelectItem value="test">Test</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </CardContent>
           <CardFooter>
-            <Button className="w-full">{loading ? "Loading..." : "Submit"}</Button>
+            <Button disabled={loading} className="w-full">
+              {loading ? "Loading..." : "Submit"}
+            </Button>
           </CardFooter>
         </form>
       </Card>

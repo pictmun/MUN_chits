@@ -4,7 +4,7 @@ import { useConversation } from "../zustand/useConversation";
 
 const useListenMessages = () => {
   const { socket } = useSocketContext();
-  const { setConversations, conversations } = useConversation();
+  const { setConversations, conversations,addMessageToConversation } = useConversation();
 
   useEffect(() => {
     if (!socket) return;
@@ -92,20 +92,12 @@ const useListenMessages = () => {
     const handleStatusUpdate = (message: string) => {
       try {
         const parsedMessage = JSON.parse(message);
+
         const findConv = conversations.find((conv: any) => conv.id === parsedMessage.conversationId);
         if(!findConv){
           setConversations((prevConversations: any[]) =>[...prevConversations, parsedMessage]);
         }else{
-          setConversations((prevConversations: any[]) =>
-            prevConversations.map((conversation) =>
-              conversation.id === parsedMessage.conversationId
-                ? {
-                    ...conversation,
-                    messages: [...conversation.messages, parsedMessage],
-                  }
-                : conversation
-            )
-          );
+          addMessageToConversation(parsedMessage.conversationId, parsedMessage);
         }
       } catch (error) {
         console.error("Error parsing status update:", error);
