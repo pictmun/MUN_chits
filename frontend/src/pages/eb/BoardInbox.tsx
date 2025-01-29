@@ -1,16 +1,22 @@
-import { useFetchEbUserMessages } from '../../hooks/useFetchEbMessages';
-import useListenMessages from '../../hooks/useListenMessages';
-import { useAuthContext } from '../../context/AuthContext';
-import { BoardConversationList } from '../../components/BoardConversationList';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
-import { Loading } from '../../components/Loading';
-const BoardInbox= () => {
+import { useFetchEbUserMessages } from "../../hooks/useFetchEbMessages";
+import useListenMessages from "../../hooks/useListenMessages";
+import { useAuthContext } from "../../context/AuthContext";
+import { BoardConversationList } from "../../components/BoardConversationList";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "../../components/ui/tabs";
+import { NoMessage } from "../../components/NoMessage";
+import { Loading } from "../../components/Loading";
+const BoardInbox = () => {
   const { authUser } = useAuthContext();
   if (authUser) {
     useListenMessages();
   }
 
-  const boardMessages = useFetchEbUserMessages();
+  const { conversations: boardMessages, loading } = useFetchEbUserMessages();
   const sortedConversations = Array.isArray(boardMessages)
     ? [...boardMessages]
         .filter((conversation) => conversation.messages?.length > 0) // Exclude conversations with no messages
@@ -43,22 +49,28 @@ const BoardInbox= () => {
     : [];
 
   const pendingConv = sortedConversations.filter((conversation: any) =>
-    conversation.messages.some((message:any) => message.status === "PENDING")
+    conversation.messages.some((message: any) => message.status === "PENDING")
   );
 
   const approvedConv = sortedConversations.filter((conversation: any) =>
-    conversation.messages.every((message:any) => message.status === "APPROVED")
+    conversation.messages.every((message: any) => message.status === "APPROVED")
   );
 
   const rejectedConv = sortedConversations.filter(
     (conversation: any) =>
-      conversation.messages.some((message:any) => message.status === "REJECTED") &&
-      !conversation.messages.some((message:any) => message.status === "PENDING")
+      conversation.messages.some(
+        (message: any) => message.status === "REJECTED"
+      ) &&
+      !conversation.messages.some(
+        (message: any) => message.status === "PENDING"
+      )
   );
-
+  if (loading) {
+    return <Loading classes="h-full w-full" />;
+  }
   // ... existing code ...
   if (!boardMessages) {
-    return <Loading classes="w-full h-full" />;
+    return <NoMessage />;
   }
   return (
     <div className="p-5 w-full">
@@ -77,20 +89,26 @@ const BoardInbox= () => {
           <TabsTrigger value="rejected">Rejected Chits</TabsTrigger>
         </TabsList>
         <TabsContent value="pending">
-          <BoardConversationList sortedConversations={pendingConv} />
+          <BoardConversationList
+            sortedConversations={pendingConv}
+            loading={loading}
+          />
         </TabsContent>
         <TabsContent value="approved">
-          <BoardConversationList sortedConversations={approvedConv} />
+          <BoardConversationList
+            sortedConversations={approvedConv}
+            loading={loading}
+          />
         </TabsContent>
         <TabsContent value="rejected">
-          <BoardConversationList sortedConversations={rejectedConv} />
+          <BoardConversationList
+            sortedConversations={rejectedConv}
+            loading={loading}
+          />
         </TabsContent>
       </Tabs>
     </div>
   );
 };
-
-
-
 
 export default BoardInbox;

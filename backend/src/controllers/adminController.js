@@ -226,11 +226,12 @@ export const getAllMessages = async (req, res) => {
             id: true,
             username: true,
             portfolio: true,
+            committee: true,
           },
         });
 
         // Ensure receiver and portfolio match
-        if (!receiver || receiver.portfolio !== req.user.portfolio) {
+        if (!receiver || receiver.committee !== req.user.committee) {
           return null; // Skip if receiver is invalid or portfolio doesn't match
         }
 

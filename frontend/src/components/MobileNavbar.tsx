@@ -1,6 +1,13 @@
-import { Mail, Menu, Send, Plus } from "lucide-react";
+import { Mail, Menu, Send, Plus, ChartBarIncreasing } from "lucide-react";
 import { Button } from "./ui/button";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "./ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "./ui/sheet";
 import { useLocation } from "react-router-dom";
 import { useAuthContext } from "../context/AuthContext";
 import LogoutButton from "./LogoutButton";
@@ -8,36 +15,41 @@ import { Link } from "react-router-dom";
 import { useState } from "react";
 
 export const MobileNavbar = () => {
-      const sidebarLinks = [
-        {
-          name: "Inbox",
-          path: "/",
-          icon: <Mail className="size-5" />,
-        },
-        {
-          name: "Sent Chits",
-          path: "/sent-chits",
-          icon: <Send />,
-        },
-        {
-          name: "Create a Chit",
-          path: "/chit-entry",
-          icon: <Plus />,
-        },
-        {
-          name:"Inbox",
-          path:"/eb-board",
-          icon:<Mail className="size-5" />
-        },
-        {
-          name:"CreateUser",
-          path:'/create-user',
-          icon:<Plus className="size-5" />
-        }
-      ];
-      const { authUser } = useAuthContext();
-      const url = useLocation().pathname;    
-      const [isOpen, setIsOpen] = useState(false);     
+  const sidebarLinks = [
+    {
+      name: "Inbox",
+      path: "/",
+      icon: <Mail className="size-5" />,
+    },
+    {
+      name: "Sent Chits",
+      path: "/sent-chits",
+      icon: <Send className="size-5" />,
+    },
+    {
+      name: "Create a Chit",
+      path: "/chit-entry",
+      icon: <Plus className="size-5" />,
+    },
+    {
+      name: "Inbox",
+      path: "/eb-board",
+      icon: <Mail className="size-5" />,
+    },
+    {
+      name: "Chit Marks",
+      icon: <ChartBarIncreasing className="size-5" />,
+      path: "/marks",
+    },
+    {
+      name: "CreateUser",
+      path: "/create-user",
+      icon: <Plus className="size-5" />,
+    },
+  ];
+  const { authUser } = useAuthContext();
+  const url = useLocation().pathname;
+  const [isOpen, setIsOpen] = useState(false);
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger className="md:hidden" asChild>
@@ -71,7 +83,7 @@ export const MobileNavbar = () => {
                 </li>
               ))}
             {authUser?.role == "EB" &&
-              sidebarLinks.slice(3, 4).map((link, index) => (
+              sidebarLinks.slice(3, 5).map((link, index) => (
                 <li
                   key={index}
                   className={`${
@@ -96,7 +108,7 @@ export const MobileNavbar = () => {
               >
                 <Link
                   to="/create-user"
-                onClick={() => setIsOpen(false)}
+                  onClick={() => setIsOpen(false)}
                   className="flex items-center justify-start gap-2"
                 >
                   <Plus className="size-5" />
@@ -108,12 +120,16 @@ export const MobileNavbar = () => {
           <div className="mt-56 flex flex-col gap-3">
             <div className="flex items-center justify-start w-full bg-muted py-1 px-2 rounded-full gap-2">
               <div className="size-10 flex items-center justify-center fonr-bold text-2xl bg-slate-200 dark:bg-slate-800 rounded-full">
-                {authUser?.username.charAt(0)}
+                {authUser?.portfolio.charAt(0).toUpperCase()}
               </div>
               <div className="flex flex-col gap-0">
-                <p className="font-semibold text-lg">{authUser?.username}</p>
+                <p className="font-semibold text-lg">
+                  {authUser?.portfolio && authUser?.portfolio.length > 10
+                    ? authUser?.portfolio.substring(0, 20) + "..."
+                    : authUser?.portfolio}
+                </p>
                 <p className="text-sm text-muted-foreground uppercase">
-                  {authUser?.portfolio}
+                  {authUser?.committee}
                 </p>
               </div>
             </div>
@@ -123,4 +139,4 @@ export const MobileNavbar = () => {
       </SheetContent>
     </Sheet>
   );
-}
+};

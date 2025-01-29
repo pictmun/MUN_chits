@@ -3,6 +3,12 @@ import { Avatar, AvatarFallback } from "./ui/avatar";
 import { Link } from "react-router-dom";
 import { ModeToggle } from "./ui/mode-toggle";
 import { MobileNavbar } from "./MobileNavbar";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "./ui/tooltip";
 
 export const Topbar = () => {
   const { authUser } = useAuthContext();
@@ -14,13 +20,21 @@ export const Topbar = () => {
       <div className="flex items-center gap-2">
         {authUser && (
           <>
-            <Avatar className="size-12">
-              <AvatarFallback className="text-xl">
-                {authUser.username.charAt(0)}
-              </AvatarFallback>
-            </Avatar>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Avatar className="size-12">
+                    <AvatarFallback className="text-xl">
+                      {authUser.portfolio.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                </TooltipTrigger>
+                <TooltipContent>{authUser?.portfolio}</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
             <ModeToggle />
-            <MobileNavbar/>
+            <MobileNavbar />
           </>
         )}
       </div>

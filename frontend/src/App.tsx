@@ -13,6 +13,7 @@ import CreateEntries from "./pages/admin/CreateEntries";
 import { Sidebar } from "./components/Sidebar";
 import { Loading } from "./components/Loading";
 import SentMessages from "./pages/delegates/SentMessages";
+import MarksPage from "./pages/eb/MarksPage";
 
 const App: React.FC = () => {
   const { isLoading, authUser } = useAuthContext();
@@ -44,6 +45,16 @@ const App: React.FC = () => {
                 element={
                   authUser && authUser.role === "EB" ? (
                     <BoardModal />
+                  ) : (
+                    <Navigate to="/login" />
+                  )
+                }
+              />
+              <Route
+                path="/marks"
+                element={
+                  authUser && authUser.role === "EB" ? (
+                    <MarksPage />
                   ) : (
                     <Navigate to="/login" />
                   )
@@ -87,7 +98,10 @@ const App: React.FC = () => {
                 path="/login"
                 element={!authUser ? <Login /> : <Navigate to="/" />}
               />
-              <Route path="/sent-chits" element={!authUser ? <Login /> : <SentMessages />} />
+              <Route
+                path="/sent-chits"
+                element={!authUser ? <Login /> : <SentMessages />}
+              />
             </Routes>
           </div>
         </div>

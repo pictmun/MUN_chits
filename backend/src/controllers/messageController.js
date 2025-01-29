@@ -126,10 +126,12 @@ export const sendMessage = async (req, res) => {
 
     // Emit the message to all EBs if isViaEB
     if (isViaEB) {
-      const EBSocketIds = EBs.map((eb) => getReceiverSocketId(eb.id)); // Map only if EBs is an array
-      EBSocketIds.forEach((socketId) => {
+      const EBSocketIds = EBs.map((eb) => getReceiverSocketId(eb.id));
+      EBSocketIds.forEach(async (socketId) => {
         if (socketId) {
-          io.to(socketId).emit("newMessage", JSON.stringify(socketPayloadEB));
+          await io
+            .to(socketId)
+            .emit("newMessage", JSON.stringify(socketPayloadEB));
         }
       });
     } else {
@@ -221,21 +223,21 @@ export const replyMessage = async (req, res) => {
   const senderId = req.user.id;
 
   try {
-    // Fetch the conversation and its participants
     const conversation = await prisma.conversation.findUnique({
       where: { id: conversationId },
       include: {
         participants: true,
-        messages: true, // Include existing messages for context
+        messages: true,
       },
     });
+
     if (!conversation)
       return res.status(404).json({ message: "Conversation not found" });
 
-    // Identify the receiver as the participant who isn't the sender
-    const receiverId = conversation.participantIds.find(
-      (id) => id !== senderId
-    );
+    const receiverId = conversation.participants.find(
+      (p) => p.id !== senderId
+    )?.id;
+
     const receiver = await prisma.user.findUnique({
       where: { id: receiverId },
     });
@@ -244,19 +246,17 @@ export const replyMessage = async (req, res) => {
       return res.status(404).json({ message: "Receiver not found" });
     }
 
-    // Fetch EB if the message is via EB
-    let EB = null;
+    let EBs = [];
     if (conversation.messages[0].isViaEB) {
-      EB = await prisma.user.findFirst({
+      EBs = await prisma.user.findMany({
         where: { role: "EB", committee: req.user.committee },
       });
-      if (!EB)
+      if (EBs.length === 0)
         return res
           .status(404)
-          .json({ message: "No EB found for this committee" });
+          .json({ message: "No EBs found for this committee" });
     }
 
-    // Create the reply message
     const newMessage = await prisma.message.create({
       data: {
         body: message,
@@ -268,81 +268,63 @@ export const replyMessage = async (req, res) => {
           : MessageStatus.APPROVED,
       },
       include: {
-        sender: {
-          select: {
-            id: true,
-            username: true,
-          },
-        },
+        sender: { select: { id: true, username: true } },
       },
     });
 
-    // Update the conversation with the new message
     await prisma.conversation.update({
       where: { id: conversationId },
       data: {
         messages: {
-          connect: {
-            id: newMessage.id,
-          },
+          connect: { id: newMessage.id },
         },
       },
     });
-    let messagePayload = {};
+
+    let messagePayload = {
+      id: newMessage.id,
+      body: newMessage.body,
+      createdAt: newMessage.createdAt,
+      updatedAt: newMessage.updatedAt,
+      senderId: senderId,
+      conversationId: conversationId,
+      isViaEB: newMessage.isViaEB,
+      status: newMessage.status,
+      score: newMessage.score || 0,
+      sender: {
+        id: senderId,
+        username: req.user.username,
+      },
+    };
+
     if (conversation.messages[0].isViaEB) {
-      messagePayload = {
-        id: newMessage.id,
-        body: newMessage.body,
-        createdAt: newMessage.createdAt,
-        updatedAt: newMessage.updatedAt,
-        senderId: senderId,
-        conversationId: conversationId,
-        isViaEB: newMessage.isViaEB,
-        status: newMessage.status,
-        score: newMessage.score || 0,
-        sender: {
-          id: senderId,
-          username: req.user.username,
-        },
-        receiver: {
-          id: receiverId,
-          username: receiver.username,
-        },
+      messagePayload.receiver = {
+        id: receiverId,
+        username: receiver.username,
       };
+    }
+
+    // Emit the message to all relevant sockets
+    if (conversation.messages[0].isViaEB) {
+      EBs.forEach((eb) => {
+        const ebSocketId = getReceiverSocketId(eb.id);
+        if (ebSocketId) {
+          io.to(ebSocketId).emit("reply", JSON.stringify(messagePayload));
+        }
+      });
     } else {
-      messagePayload = {
-        id: newMessage.id,
-        body: newMessage.body,
-        createdAt: newMessage.createdAt,
-        updatedAt: newMessage.updatedAt,
-        senderId: senderId,
-        conversationId: conversationId,
-        isViaEB: newMessage.isViaEB,
-        status: newMessage.status,
-        score: newMessage.score || 0,
-        sender: {
-          id: senderId,
-          username: req.user.username,
-        },
-      };
+      const receiverSocketId = getReceiverSocketId(receiverId);
+      if (receiverSocketId) {
+        io.to(receiverSocketId).emit("reply", JSON.stringify(messagePayload));
+      }
     }
-    // Format the response payload
 
-    // Emit the message to the appropriate socket (EB or receiver)
-    const receiverSocketId = getReceiverSocketId(
-      conversation.messages[0].isViaEB ? EB.id : receiverId
-    );
-
+    // Also notify the sender
     const senderSocketId = getReceiverSocketId(senderId);
-    // Send real-time socket event for the reply
-    if (receiverSocketId) {
-      io.to(receiverSocketId).emit("reply", JSON.stringify(messagePayload));
-    }
     if (senderSocketId) {
       io.to(senderSocketId).emit("reply", JSON.stringify(messagePayload));
     }
 
-    // Send the response
     res.status(201).json({
       message: "Message sent successfully",
       data: messagePayload,

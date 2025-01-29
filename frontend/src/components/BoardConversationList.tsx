@@ -4,19 +4,27 @@ import { useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { Button } from "./ui/button";
 import { ArrowLeft } from "lucide-react";
+import { NoMessage } from "./NoMessage";
 import { Loading } from "./Loading";
 const ITEMS_PER_PAGE = 15; // Number of items per page
 
-export const BoardConversationList = ({sortedConversations}:{sortedConversations:any}) => {
+export const BoardConversationList = ({
+  sortedConversations,
+  loading,
+}: {
+  sortedConversations: any;
+  loading: boolean;
+}) => {
   const [currentPage, setCurrentPage] = useState(1);
 
-    const totalPages = Math.ceil(sortedConversations.length / ITEMS_PER_PAGE);
-    // Paginate the conversations
-    const paginatedConversations = sortedConversations.slice(
-      (currentPage - 1) * ITEMS_PER_PAGE,
-      currentPage * ITEMS_PER_PAGE
-    );
-    if(!sortedConversations.length) return <Loading classes="w-full h-full" />
+  const totalPages = Math.ceil(sortedConversations.length / ITEMS_PER_PAGE);
+  // Paginate the conversations
+  const paginatedConversations = sortedConversations.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+  if (loading) return <Loading classes="w-full h-full" />;
+  if (!sortedConversations.length) return <NoMessage />;
   return (
     <>
       <ul className="border rounded-lg mx-auto w-[90%] md:w-full divide-y divide-y-muted-foreground max-w-4xl">
@@ -51,11 +59,10 @@ export const BoardConversationList = ({sortedConversations}:{sortedConversations
       )}
     </>
   );
-}
+};
 type ListItemProps = {
   conversation: any;
 };
-
 
 const ListItem: React.FC<ListItemProps> = ({ conversation }) => {
   const latestMessage = conversation.messages?.sort(
