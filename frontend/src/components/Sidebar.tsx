@@ -32,7 +32,6 @@ export const Sidebar = () => {
     },
   ];
   const { authUser } = useAuthContext();
-  console.log(authUser);
   const url = useLocation().pathname;
   return (
     <div className="hidden sticky left-0 top-0 md:flex flex-col w-1/6 p-4 border-r h-[calc(100vh-40px)] max-h-[calc(100vh-40px)] ">
