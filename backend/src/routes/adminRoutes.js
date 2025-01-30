@@ -1,5 +1,6 @@
 import express from "express";
 import {
+  getAllMarks,
   getAllMessages,
   getMessageFromId,
   signup,
@@ -20,4 +21,5 @@ adminRouter.patch(
 );
 adminRouter.get("/get-messages", protectRoute, ebAuth, getAllMessages);
 adminRouter.get("/get-message/:id", protectRoute, ebAuth,getMessageFromId);
+adminRouter.get("/get-marks",protectRoute,ebAuth,getAllMarks);
 export default adminRouter;

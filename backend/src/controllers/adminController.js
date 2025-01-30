@@ -336,3 +336,62 @@ export const getMessageFromId = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+export const getAllMarks = async (req, res) => {
+  try {
+    const userCommittee = req.user.committee;
+
+    // Find all delegates with the same committee
+    const findDelegatesWithSameCommittee = await prisma.user.findMany({
+      where: {
+        committee: userCommittee,
+        role: "DELEGATE",
+      },
+    });
+
+    if (findDelegatesWithSameCommittee) {
+      // Calculate total number of messages and total score for each delegate
+      const delegateMarks = await Promise.all(
+        findDelegatesWithSameCommittee.map(async (delegate) => {
+          const totalMessages = await prisma.message.count({
+            where: {
+              senderId: delegate.id,
+              status: "APPROVED",
+              isViaEB: true,
+            },
+          });
+
+          const totalScore = await prisma.message.aggregate({
+            _sum: {
+              score: true,
+            },
+            where: {
+              senderId: delegate.id,
+              status: "APPROVED",
+              isViaEB: true,
+            },
+          });
+
+          return {
+            delegateId: delegate.id,
+            portfolio: delegate.portfolio,
+            username: delegate.username,
+            totalMessages,
+            totalScore: totalScore._sum.score || 0,
+          };
+        })
+      );
+
+      return res.status(200).json({
+        success: true,
+        message: "Marks fetched successfully",
+        data: delegateMarks,
+      });
+    } else {
+      return res.status(404).json({ message: "No delegates found" });
+    }
+  } catch (error) {
+    console.error("Error in getAllMarks:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};

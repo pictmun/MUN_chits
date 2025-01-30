@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import LogoutButton from "./LogoutButton";
-import { Mail, Plus, Send } from "lucide-react";
+import { ChartBarIncreasing, Mail, Plus, Send } from "lucide-react";
 import { useAuthContext } from "../context/AuthContext";
 
 export const Sidebar = () => {
@@ -28,7 +28,7 @@ export const Sidebar = () => {
     {
       name: "Chit Marks",
       path: "/marks",
-      icon: <Mail className="size-5" />,
+      icon: <ChartBarIncreasing className="size-5" />,
     },
   ];
   const { authUser } = useAuthContext();
