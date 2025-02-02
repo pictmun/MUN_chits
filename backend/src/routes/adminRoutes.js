@@ -12,7 +12,7 @@ import { ebAuth } from "../middleware/ebAuthMiddleware.js";
 
 const adminRouter = express.Router();
 
-adminRouter.post("/create", adminAuth, protectRoute, signup);
+adminRouter.post("/create", protectRoute, adminAuth, signup);
 adminRouter.patch(
   "/update-message-status/:id",
   protectRoute,
