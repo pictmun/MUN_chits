@@ -64,6 +64,7 @@ export const sendMessage = async (req, res) => {
           select: {
             id: true,
             username: true,
+            portfolio: true,
           },
         },
       },
@@ -89,6 +90,7 @@ export const sendMessage = async (req, res) => {
           sender: {
             id: newMessage.sender.id,
             username: newMessage.sender.username,
+            portfolio: newMessage.sender.portfolio,
           },
           isViaEB: newMessage.isViaEB,
           score: newMessage.score,
@@ -105,6 +107,7 @@ export const sendMessage = async (req, res) => {
           sender: {
             id: newMessage.sender.id,
             username: newMessage.sender.username,
+            portfolio: newMessage.sender.portfolio,
           },
           senderId: newMessage.senderId,
           isViaEB: newMessage.isViaEB,
@@ -116,6 +119,7 @@ export const sendMessage = async (req, res) => {
       sender: {
         id: sender.id,
         username: sender.username,
+        portfolio: sender.portfolio,
       },
       receiver: {
         id: receiver.id,
@@ -268,7 +272,7 @@ export const replyMessage = async (req, res) => {
           : MessageStatus.APPROVED,
       },
       include: {
-        sender: { select: { id: true, username: true } },
+        sender: { select: { id: true, username: true, portfolio: true } },
       },
     });
 
@@ -294,6 +298,7 @@ export const replyMessage = async (req, res) => {
       sender: {
         id: senderId,
         username: req.user.username,
+        portfolio: req.user.portfolio,
       },
     };
 
@@ -301,6 +306,7 @@ export const replyMessage = async (req, res) => {
       messagePayload.receiver = {
         id: receiverId,
         username: receiver.username,
+        portfolio: receiver.portfolio,
       };
     }
 
@@ -352,6 +358,7 @@ export const getReceivedMessages = async (req, res) => {
           select: {
             id: true,
             username: true, // Include participant details
+            portfolio: true,
           },
         },
         messages: {
@@ -369,6 +376,7 @@ export const getReceivedMessages = async (req, res) => {
               select: {
                 id: true,
                 username: true, // Include the sender's username
+                portfolio: true,
               },
             },
           },
@@ -390,6 +398,7 @@ export const getReceivedMessages = async (req, res) => {
         sender: {
           id: message.sender.id,
           username: message.sender.username,
+          portfolio: message.sender.portfolio,
         },
         isViaEB: message.isViaEB,
         score: message.score,
@@ -422,6 +431,7 @@ export const getConversationFromId = async (req, res) => {
               select: {
                 id: true,
                 username: true, // Include the sender's username
+                portfolio: true,
               },
             },
           },
@@ -464,6 +474,7 @@ export const getSentConversations = async (req, res) => {
           select: {
             id: true,
             username: true, // Include participant details
+            portfolio: true,
           },
         },
         messages: {
@@ -478,6 +489,7 @@ export const getSentConversations = async (req, res) => {
               select: {
                 id: true,
                 username: true, // Include the sender's username
+                portfolio: true,
               },
             },
           },
@@ -502,6 +514,7 @@ export const getSentConversations = async (req, res) => {
           sender: {
             id: message.sender.id,
             username: message.sender.username,
+            portfolio: message.sender.portfolio,
           },
           status: message.status,
         })),

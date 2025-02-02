@@ -21,7 +21,6 @@ import {
 import { Textarea } from "../../components/ui/textarea";
 import { Button } from "../../components/ui/button";
 
-
 const ChitEntry = () => {
   const [recipientId, setRecipientId] = useState("");
   const [message, setMessage] = useState("");
@@ -33,7 +32,7 @@ const ChitEntry = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await sendChit(message,isViaEb, recipientId);
+      await sendChit(message, isViaEb, recipientId);
       navigate("/");
     } catch (error) {
       console.error(error);
@@ -42,6 +41,7 @@ const ChitEntry = () => {
       setMessage("");
     }
   };
+
   return (
     <Card className="max-w-xl w-full border-0 shadow-none rounded-lg p-4">
       <CardHeader>
@@ -84,7 +84,7 @@ const ChitEntry = () => {
               <SelectContent>
                 {recipients.map((user: any) => (
                   <SelectItem key={user.id} value={user.id}>
-                    {user.username}
+                    {user.portfolio}
                   </SelectItem>
                 ))}
               </SelectContent>

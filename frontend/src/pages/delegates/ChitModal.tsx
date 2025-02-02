@@ -27,7 +27,7 @@ const ChitModal = ({
   const handleClose = () => {
     navigate("/");
   };
-
+  console.log(messages);
   return (
     <div className="flex flex-col gap-2 w-full divided-y-2  ">
       <div className="p-6 relative mb-10">
@@ -50,16 +50,19 @@ const ChitModal = ({
             </Button>
           </div>
         </div>
-        {messages.map((message: any,index: number) => (
-          <div key={index} className="flex flex-col justify-start mb-2 pb-2 border-b-2 border-b-muted">
+        {messages.map((message: any, index: number) => (
+          <div
+            key={index}
+            className="flex flex-col justify-start mb-2 pb-2 border-b-2 border-b-muted"
+          >
             {/* Message Header -> Sender Details */}
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-3">
                 <div className="rounded-full size-12 bg-slate-200 dark:bg-slate-800 text-primary font-bold flex items-center justify-center text-lg">
-                  {message?.sender?.username.charAt(0)}
+                  {message?.sender?.portfolio?.charAt(0)}
                 </div>
                 <p className="font-semibold text-lg">
-                  {message?.sender?.username}
+                  {message?.sender?.portfolio}
                 </p>
               </div>
               <div className="text-muted-foreground text-sm">

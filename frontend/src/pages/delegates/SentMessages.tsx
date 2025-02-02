@@ -130,13 +130,13 @@ const ListItem: React.FC<ListItemProps> = ({ conversation }) => {
         className="flex items-center p-4 hover:bg-muted cursor-pointer"
       >
         <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-primary font-bold mr-4">
-          {latestMessage?.sender?.username?.charAt(0) || "?"}
+          {latestMessage?.sender?.portfolio?.charAt(0) || "?"}
         </div>
 
         <div className="flex-1">
           <div className="flex justify-between">
             <span className="font-semibold text-primary text-xl">
-              {latestMessage?.sender?.username || "Unknown Sender"}
+              {latestMessage?.sender?.portfolio || "Unknown Sender"}
             </span>
             <span className="text-xs text-muted-foreground">
               {latestMessage?.createdAt

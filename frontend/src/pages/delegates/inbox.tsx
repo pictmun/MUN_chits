@@ -17,14 +17,13 @@ const Inbox = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const { authUser } = useAuthContext();
 
-  
   const sortedConversations = useMemo(() => {
     if (!Array.isArray(conversations)) return [];
     return conversations
       .filter((conversation) => conversation.messages?.length > 0) // Exclude empty conversations
       .sort((a, b) => {
         const latestMessageA = a.messages.reduce(
-          (latest:any, message:any) =>
+          (latest: any, message: any) =>
             new Date(message.createdAt).getTime() >
             new Date(latest.createdAt).getTime()
               ? message
@@ -33,7 +32,7 @@ const Inbox = () => {
         );
 
         const latestMessageB = b.messages.reduce(
-          (latest:any, message:any) =>
+          (latest: any, message: any) =>
             new Date(message.createdAt).getTime() >
             new Date(latest.createdAt).getTime()
               ? message
@@ -57,9 +56,9 @@ const Inbox = () => {
     );
   }, [sortedConversations, currentPage]);
 
- if(authUser) {
-   useListenMessages();
- }
+  if (authUser) {
+    useListenMessages();
+  }
   if (loading) {
     return <Loading classes="w-full h-full" />;
   }
@@ -76,7 +75,7 @@ const Inbox = () => {
       {sortedConversations?.length === 0 && <NoMessage />}
 
       <ul className="border rounded-lg mx-auto w-[90%] md:w-full divide-y divide-y-muted-foreground max-w-5xl">
-        {paginatedConversations.map((conversation,index:number) => (
+        {paginatedConversations.map((conversation, index: number) => (
           <ListItem key={index} conversation={conversation} />
         ))}
       </ul>
@@ -116,7 +115,8 @@ type ListItemProps = {
 
 const ListItem: React.FC<ListItemProps> = ({ conversation }) => {
   const latestMessage = conversation.messages?.sort(
-    (a:any, b:any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    (a: any, b: any) =>
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   )[0];
 
   return (
@@ -126,13 +126,13 @@ const ListItem: React.FC<ListItemProps> = ({ conversation }) => {
         className="flex items-center p-4 hover:bg-muted cursor-pointer"
       >
         <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-primary font-bold mr-4">
-          {latestMessage?.sender?.username?.charAt(0) || "?"}
+          {latestMessage?.sender?.portfolio?.charAt(0) || "?"}
         </div>
 
         <div className="flex-1">
           <div className="flex justify-between">
             <span className="font-semibold text-primary text-xl">
-              {latestMessage?.sender?.username || "Unknown Sender"}
+              {latestMessage?.sender?.portfolio || "Unknown Sender"}
             </span>
             <span className="text-xs text-muted-foreground">
               {latestMessage?.createdAt

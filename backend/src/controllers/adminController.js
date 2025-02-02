@@ -63,6 +63,7 @@ export const updateMessageStatus = async (req, res) => {
           select: {
             id: true,
             username: true,
+            portfolio: true,
           },
         },
       },
@@ -75,6 +76,7 @@ export const updateMessageStatus = async (req, res) => {
           select: {
             id: true,
             username: true,
+            portfolio: true,
           },
         },
         messages: {
@@ -83,6 +85,7 @@ export const updateMessageStatus = async (req, res) => {
               select: {
                 id: true,
                 username: true,
+                portfolio: true,
               },
             },
           },
@@ -111,6 +114,7 @@ export const updateMessageStatus = async (req, res) => {
         sender: {
           id: updatedMessage.sender.id,
           username: updatedMessage.sender.username,
+          portfolio: updatedMessage.sender.portfolio,
         },
         isViaEB: updatedMessage.isViaEB,
       };
@@ -198,6 +202,7 @@ export const getAllMessages = async (req, res) => {
                 select: {
                   id: true,
                   username: true, // Include sender's username
+                  portfolio: true,
                 },
               },
             },
@@ -243,6 +248,7 @@ export const getAllMessages = async (req, res) => {
           sender: {
             id: senderId,
             username: conversation.messages[0]?.sender.username,
+            portfolio: conversation.messages[0]?.sender.portfolio,
           },
         };
       })
@@ -275,6 +281,7 @@ export const getMessageFromId = async (req, res) => {
               select: {
                 id: true,
                 username: true, // Include the sender's username
+                portfolio: true,
               },
             },
           },
@@ -304,6 +311,7 @@ export const getMessageFromId = async (req, res) => {
           select: {
             id: true,
             username: true,
+            portfolio: true,
           },
         });
 
@@ -313,6 +321,7 @@ export const getMessageFromId = async (req, res) => {
           sender: {
             id: senderId,
             username: message.sender.username,
+            portfolio: message.sender.portfolio,
           },
         };
       })
